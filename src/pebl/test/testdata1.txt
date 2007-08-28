@@ -1,0 +1,4 @@
+samples	var 1	var 2	var 3
+sample 1	2.5!	!X	1.7
+sample 2	1.1	!1.7	2.3
+sample 3	4.2	999.3	12
