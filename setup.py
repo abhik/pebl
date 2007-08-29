@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='Pebl',
-    version='0.2.1',
+    version='0.8.0',
     description='Python Environment for Bayesian Learning',
     package_dir={'': 'src'},
     packages=find_packages('src'),
@@ -17,7 +17,7 @@ setup(
     url='http://sysbio.engin.umich.edu/Pebl/',
 
     # required dependencies
-    install_requires=['numpy >= 0.9', 'nose >= 0.9', 'pydot'],
+    install_requires=['numpy >= 1.0.3', 'nose >= 0.9', 'pydot'],
     
     # data files (mostly just the test data for unit tests)
     include_package_data = True,
