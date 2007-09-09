@@ -1,15 +1,9 @@
-# Want code to be py2.4 compatible. So, can't use relative imports.
-import sys
-sys.path.insert(0, "../")
-
 # set numpy.test to None so we don't run numpy's tests.
 from numpy import *
 test = None
 
-from learners import scorer
-import data
-import network
-
+from pebl.learners import scorer
+from pebl import data, network
 
 def _create_data_and_net():
     # this data and net from test_stochfunc.TestMultinomialStochasticFunction.test_loglikelihood

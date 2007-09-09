@@ -1,14 +1,8 @@
-# Want code to be py2.4 compatible. So, can't use relative imports.
-import sys
-sys.path.insert(0, "../")
-
 # set numpy.test to None so we don't run numpy's tests.
 from numpy import *
 test = None
 
-import distributions
-import network
-import data
+from pebl import distributions, network, data
 
 def _create_data_and_net():
     a = array([

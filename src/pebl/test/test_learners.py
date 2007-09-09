@@ -1,14 +1,9 @@
-# Want code to be py2.4 compatible. So, can't use relative imports.
-import sys
-sys.path.insert(0, "../")
-
 # set numpy.test to None so we don't run numpy's tests.
 from numpy import *
 test = None
 
-from learners import greedy, simanneal
-import data
-
+from pebl import data
+from pebl.learners import greedy, simanneal
 
 class TestGreedyLearner:
     def test_greedy_learner_basic(self):
