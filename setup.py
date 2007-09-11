@@ -21,4 +21,7 @@ setup(
     
     # data files (mostly just the test data for unit tests)
     include_package_data = True,
+
+    # tests
+    test_suite = 'nose.collector',
 )

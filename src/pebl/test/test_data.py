@@ -1,16 +1,29 @@
-
 # set numpy.test to None so we don't run numpy's tests.
 from numpy import *
 test = None
 
 from pebl import data 
 
+TESTDATA1 = """samples	var 1	var 2	var 3
+sample 1	2.5!	!X	1.7
+sample 2	1.1	!1.7	2.3
+sample 3	4.2	999.3	12
+"""
+
 class TestFileParsing:
     def setUp(self):
+        # don't want tests to depend on external data files (makes running tests from setuptools more difficult)
+        f = open("testdata1.txt", 'w')
+        f.write(TESTDATA1)
+        f.close()
+
         self.data = data.fromfile("testdata1.txt", header=True, sampleheader=True)        
 
     def tearDown(self):
-        pass
+        try:
+            os.unlink("testdata1.txt")
+        except:
+            pass
 
     def test_basic_parsing(self):
         assert self.data[0][0] == 2.5, "Parsing values."

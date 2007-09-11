@@ -4,6 +4,40 @@ test = None
 
 from pebl.learners import scorer
 from pebl import data, network
+import os
+
+TESTDATA2 = """0	2	X	1	2
+1	2	X	1	1
+2	1	X	0	2
+2	1	X	1	1
+1	1	X	2	1
+1	1	X	0	1
+2	0	X	1	0
+1	2	X	1	1
+1	0	X	0	2
+1	2	X	2	0
+2	1	X	0	2
+1	2	X	0	2
+0	2	X	0	1
+1	2	X	1	2
+1	2	X	0	0
+1	0	X	1	0
+1	2	X	0	0
+1	2	X	0	1
+2	0	X	2	2
+1	1	X	0	1
+1	0	X	0	2
+0	1	X	1	1
+2	2	X	2	2
+2	2	X	1	0
+2	0	X	2	2
+2	1	X	0	0
+0	2	X	0	1
+1	0	X	2	2
+1	2	X	1	1
+0	0	X	2	1
+"""
+
 
 def _create_data_and_net():
     # this data and net from test_stochfunc.TestMultinomialStochasticFunction.test_loglikelihood
@@ -117,12 +151,23 @@ class TestManagedScorer:
 
 class TestMissingDataManagedScorer:
     def setUp(self):
+        # write out test data (don't want to depend on external data files)
+        f = open("testdata2.txt", 'w')
+        f.write(TESTDATA2)
+        f.close()
+        
         self.data = data.fromfile("testdata2.txt")
         self.data.arities[2] = 3
         self.net = network.fromdata(self.data)
         a,b,c,d,e = 0,1,2,3,4
         self.net.edges.add_many([(a,c), (b,c), (c,d), (c,e)])
         self.scorer = scorer.MissingDataManagedScorer(self.net, self.data)
+
+    def tearDown(self):
+        try:
+            os.unlink("testdata2.txt")
+        except:
+            pass
 
     def test_gibbs_scoring(self):
         # score two nets (correct one and bad one) with missing values.

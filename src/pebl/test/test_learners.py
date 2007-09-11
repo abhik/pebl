@@ -4,27 +4,53 @@ test = None
 
 from pebl import data
 from pebl.learners import greedy, simanneal
+import os
 
-class TestGreedyLearner:
+TESTDATA = """2	0	0	2	0	0	2	1	2	0
+2	1	2	0	2	0	2	1	0	0
+0	2	1	0	0	1	0	1	0	0
+2	0	1	2	2	0	0	0	2	2
+0	2	0	1	0	1	0	1	0	0
+0	1	2	0	0	1	0	1	2	0
+2	1	0	2	0	1	0	0	2	1
+0	0	1	0	0	0	0	2	1	2
+0	0	2	0	2	0	0	0	0	0
+1	0	2	0	0	1	2	0	0	2
+1	1	0	2	0	0	0	1	2	2
+2	1	1	1	2	1	0	2	1	0
+0	2	1	0	0	1	2	1	0	2
+1	1	1	2	2	1	0	1	2	0
+1	0	0	2	0	0	1	1	0	0
+1	1	2	1	2	0	0	1	2	1
+1	1	0	2	0	1	1	1	1	1
+2	1	0	2	1	0	0	0	0	0
+0	2	0	1	0	1	2	1	0	2
+1	0	1	1	1	2	0	1	0	2
+"""
+
+class TestLearners:
+    def setUp(self):
+        f = open("test3.txt", 'w')
+        f.write(TESTDATA)
+        f.close()
+
+    def tearDown(self):
+        os.remove("test3.txt")
+
+
     def test_greedy_learner_basic(self):
-        dat = data.fromfile("./benchdata/benchdata.10.20.txt")
+        dat = data.fromfile("test3.txt")
         g = greedy.GreedyLearner(dat)
         g.run()
 
     def test_greedy_learner_max_iterations(self):
-        try:
-            dat = data.fromfile("./benchdata/benchdata.10.20.txt")
-            g = greedy.GreedyLearner(dat)
-            g.run(greedy.stop_after_max_iterations(100))
-        except:
-            assert 1 == 2, "GreedyLearner with max iterations."
+        dat = data.fromfile("test3.txt")
+        g = greedy.GreedyLearner(dat)
+        g.run(greedy.stop_after_max_iterations(100))
 
-class TestSimulatedAnnealingLearner:
     def test_simanneal_basic(self):
-        dat = data.fromfile("./benchdata/benchdata.10.20.txt")
+        dat = data.fromfile("test3.txt")
         s = simanneal.SimulatedAnnealingLearner(dat)
         s.run()
-
-
 
 
