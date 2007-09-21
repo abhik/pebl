@@ -170,7 +170,7 @@ class PeblData(ndarray):
         """Return the list of latent variables."""
 
         return [v for v in range(self.numvariables) 
-                    if self.num_missingvals_for_variable(v) is self.numvariables
+                    if self.num_missingvals_for_variable(v) is self.numsamples
                ]
 
     def interventions_for_sample(self, sample):
