@@ -148,6 +148,34 @@ def nestediter(lst1, lst2):
 
 
 
+def exhaustive_list(list_of_lists):
+    """Given a list of lists, yield all possible combinations.
+
+    >>> list(exhaustive_list([[0,1], [0,1,"foo"]]))
+     [[0, 0], [0, 1], [0, 'foo'], [1, 0], [1, 1], [1, 'foo']]
+
+     >>> list(exhaustive_list([[0,1], [0,1], [0,1]]))
+     [[0, 0, 0],
+     [0, 0, 1],
+     [0, 1, 0],
+     [0, 1, 1],
+     [1, 0, 0],
+     [1, 0, 1],
+     [1, 1, 0],
+     [1, 1, 1]]
+    
+    """
+
+    head,rest = list_of_lists[0], list_of_lists[1:]
+    if len(rest) is 0:
+        for val in head:
+            yield (val,)
+    else:
+        for val in head:
+            for val2 in exhaustive_list(rest):
+                yield flatten((val, val2))
+
+
 def logscale_probwheel(logvalues):
     # 1) rescale by setting max value to 0 and 2) exponentiate then 3) normalize (set sum to 1)
     logvalues = logvalues - max(logvalues)
