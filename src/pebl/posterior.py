@@ -17,7 +17,7 @@ class Posterior():
 
     def _consensus_matrix(self):
         norm_scores = normalize(exp(rescale_logvalues(self.scores)))
-        return sum(n*s for n,s in zip(self.adjacency_matrices, self.scores))
+        return sum(n*s for n,s in zip(self.adjacency_matrices, norm_scores))
 
     def __iter__(self):
         for adjmat,score in zip(self.adjacency_matrices, self.scores):

@@ -248,13 +248,16 @@ class MatrixEdgeList(EdgeList):
 
 
 class NodeList(list):
-    def __not_allowed__(self, *args, **kwargs):
-        raise Exception("Canot add or remove nodes after a network's nodelist has been finalized.")
-
     def add(self, node):
+        if getattr(self,' __finalized__', False):
+            raise Exception("Canot add or remove nodes after a network's nodelist has been finalized.")
+
         list.append(self, node)
 
     def remove(self, node):
+        if getattr(self,' __finalized__', False):
+            raise Exception("Canot add or remove nodes after a network's nodelist has been finalized.")
+        
         list.remove(self, node)
 
     def byname(self, names=[], namelike=""):
@@ -298,8 +301,7 @@ class Network(object):
     # Cannot add/remove nodes after this
     # Clears all edges
     def finalize_nodelist(self):
-        self.nodes.add = self.nodes.__not_allowed__
-        self.nodes.remove = self.nodes.__not_allowed__
+        self.nodes.__finalized__ = True
         self.edges = MatrixEdgeList(len(self.nodes))
 
     def is_acyclic__eigval_implementation(self):
