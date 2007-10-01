@@ -37,7 +37,6 @@ class TestLearners:
     def tearDown(self):
         os.remove("test3.txt")
 
-
     def test_greedy_learner_basic(self):
         dat = data.fromfile("test3.txt")
         g = greedy.GreedyLearner(dat)
@@ -53,4 +52,9 @@ class TestLearners:
         s = simanneal.SimulatedAnnealingLearner(dat)
         s.run()
 
-
+    def test_learner_result_posterior(self):
+        dat = data.fromfile("test3.txt")
+        g = greedy.GreedyLearner(dat)
+        g.run(greedy.stop_after_max_iterations(100))
+        g.result.posterior.consensus_network(.4)
+        
