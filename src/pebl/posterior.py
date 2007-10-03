@@ -43,4 +43,6 @@ class Posterior():
         features = features.astype(bool)
         
         return network.from_nodes_and_edgelist(self.nodes, features)
- 
+
+    def subset(self, size):
+        return Posterior(self.nodes, self.adjacency_matrices[:size], self.scores[:size])
