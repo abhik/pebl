@@ -34,7 +34,10 @@ class Posterior():
         return net
 
     def __getslice__(self, i, j):
-        return [self.__getitem__(x) for x in range(i,j)]
+        return Posterior(self.nodes, self.adjacency_matrices[i:j], self.scores[i:j])
+
+    def __len__(self):
+        return len(self.scores)
 
     def consensus_network(self, threshold=.3):
         features = self._consensus_matrix()
@@ -44,5 +47,3 @@ class Posterior():
         
         return network.from_nodes_and_edgelist(self.nodes, features)
 
-    def subset(self, size):
-        return Posterior(self.nodes, self.adjacency_matrices[:size], self.scores[:size])
