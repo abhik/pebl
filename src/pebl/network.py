@@ -245,6 +245,9 @@ class MatrixEdgeList(EdgeList):
             return self.adjacency_matrix[edge]
         except:
             return False
+    
+    def __eq__(self, other):
+        return self.adjacency_matrix.__hash__() == other.adjacency_matrix.__hash__()
 
 
 class NodeList(list):
