@@ -313,7 +313,12 @@ class Network(object):
             return False
 
         # network is acylcic IFF all eigenvalues of adjacency matrix are positive and real
-        ev = linalg.eigvals(self.edges.adjacency_matrix)
+        try:
+            ev = linalg.eigvals(self.edges.adjacency_matrix)
+        except:
+            # the eigenvalue calculation sometimes fails to converge.. 
+            return self.is_acyclic__dfs_implementation()
+
         if any(ev[iscomplex(ev) == True]):
             # complex eigenvalues, so not acyclic
             return False
