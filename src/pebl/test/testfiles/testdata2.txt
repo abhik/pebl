@@ -1,0 +1,7 @@
+# comment line			
+"shh,discrete(2)"	"ptchp,discrete(3)"	"smo,continuous"	"outcome,class(good, bad)"
+
+0!	!0	1.25	good
+#comment in the data section			
+1	!1	1.1	bad
+1	2	0.45	bad

@@ -1,0 +1,8 @@
+# some calculations with this dataset derived manually in pebl/test/test_cpd.py
+
+"v1,discrete(2)"	"v2,discrete(2)"	"v3,discrete(2)"	"v4,discrete(2)"
+0	1	1	0
+1	0	0	1
+1	1	1	0
+1	1	1	0
+0	0	1	1

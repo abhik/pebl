@@ -1,0 +1,4 @@
+"shh,discrete(2)"	"ptchp,discrete(3)"	
+sample1	0!	!0
+sample2	1	!1
+sample3	1	2

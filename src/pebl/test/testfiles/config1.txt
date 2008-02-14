@@ -1,0 +1,4 @@
+[test]
+param1 = foo
+param5 = 50
+param7 = 2.0
