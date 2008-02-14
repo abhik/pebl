@@ -13,7 +13,6 @@ import numpy as N
 from pebl import network, config, evaluator, data, prior
 from pebl.taskcontroller import Task
 from pebl.util import unzip
-import codeutil
 
 #
 # Exceptions
