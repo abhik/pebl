@@ -1,116 +1,216 @@
-import sys
-from ConfigParser import ConfigParser
+"""Classes and functions for specifying and working with parameters."""
 
+from __future__ import with_statement
+from ConfigParser import ConfigParser
+import sys
+import os.path
+
+from pebl.util import unzip
+
+#
+# Global list of parameters
+#
 _parameters = {}
 
-# validators
-def between_min_and_max(min, max):
-    return lambda x: x >= min and x <= max
 
-def one_of(*values):
-    return lambda x: x in values
+#
+# Validator Factories (they return validator functions)
+#
+def between(min, max):
+    """Returns validator that checks whether value is between min and max."""
+    v = lambda x: x >= min and x <= max
+    v.__doc__ = "Parameter value should be between %d and %d." % (min,max)
+    return v
 
-def at_least(min):
-    return lambda x: x > min
+def oneof(*values):
+    """Returns validator that checks whether value is in approved list."""
+    v = lambda x: x in values
+    v.__doc__ = "Parameter value should be one of {%s}." % ', '.join(values)
+    return v
 
-def at_most(max):
-    return lambda x: x < max
+def atleast(min):
+    """Returns validator that checks whether value is > min."""
+    v =  lambda x: x >= min
+    v.__doc__ = "Parameter value should be at least %d." % min
+    return v
 
-class ParameterSpec:
-    def __init__(self, name, description, datatype, default=None, validator=lambda x: True):
-        if len(name.split('.')) > 2:
-            raise Exception("Parameter name has to be of the form 'section.name' or 'name'")
+def atmost(max):
+    """Returns validator that checks whether value is < max."""
+    v = lambda x: x <= max
+    v.__doc__ = "Parameter value should be at most %d." % max
+    return v
 
-        self.name = name
-        self.attr_name = name[name.find(".")+1:]
-        self.section = name[:name.find(".")] or 'DEFAULT'
+def fileexists():
+    """Returns validator that checks whether value is an existing file."""
+    v = lambda x: os.path.exists(x) and os.path.isfile(x)
+    v.__doc__ = "Parameter value should be a file that exists."
+    return v
+
+
+#
+# Parameter classes
+#
+class Parameter:
+    """Classes for configuration parameters."""
+
+    datatype = None
+
+    def __init__(self, name, description, validator=lambda x: True, default=None):
+        nameparts = name.split('.')
+        if len(nameparts) is not 2:
+            raise Exception("Parameter name has to be of the form 'section.name'")
+
+        self.name = name.lower()
+        self.section, self.option = nameparts
 
         self.description = description
-        self.datatype = datatype
         self.validator = validator
-        self.value = default
-        self.value_source = None
+        self.value = self.default = default
+        self.source = None
 
+        # add self to the parameter registry
+        _parameters[self.name] = self
 
     def __repr__(self):
-        return "%s = %s (%s): %s" % (self.name, self.value, self.datatype.__name__, self.description)
+        return "%s = %s [%s]: %s" % (self.name, self.value, 
+                                     self.datatype.__name__, self.description)
 
-# has_parameter DSL (domain specific language) statement
-# idea from http://elixir.ematia.de/svn/elixir/trunk/elixir/statements.py
-class has_parameter_statement(object):
-    def __call__(self, *args, **kwargs):
-        paramspec = ParameterSpec(*args, **kwargs)
-        class_locals = sys._getframe(1).f_locals
-        
-        class_params = class_locals.setdefault('__parameters__', [])
-        class_params.append(paramspec)
-        add_parameter(paramspec)
+class StringParameter(Parameter): datatype=str
+class IntParameter(Parameter): datatype=int
+class FloatParameter(Parameter): datatype=float
 
-has_parameter = has_parameter_statement()
+#
+# Functions for {get/set/read/write/list}ing parameters
+#
+def set(name, value, source='config.set'):
+    """Set a parameter value.
 
+     - name should be of the form "section.name".
+     - value can be a string which will be casted to the required datatype.
+     - source specifies where this parameter value was specified (config file,
+       command line, interactive shell, etc).
 
-def add_parameter(paramspec):
-    _parameters[paramspec.name.lower()] = paramspec
+    """
 
-def set(name, value, value_source='config.set'):
     name = name.lower()
     
     if name not in _parameters:
-        raise Exception("Parameter %s is unknown." % name)
+        msg = "Parameter %s is unknown." % name
+        raise KeyError(msg)
     
-    paramspec = _parameters[name]
+    param = _parameters[name]
 
     # try coercing value to required data type
     try:
-        value = paramspec.datatype(value)
+        value = param.datatype(value)
     except ValueError, e:
-        raise Exception("Cannot convert value to required datatype: %s" % e.message)
+        msg = "Cannot convert value to required datatype: %s" % e.message
+        raise Exception(msg)
 
     # try validating
     try:
-        valid = paramspec.validator(value)
+        valid = param.validator(value)
     except:
-        raise Exception("Validator for %s caused an error while validating value %s" % (name, value))
+        msg = "Validator for parameter %s caused an error while validating" + \
+              "value %s"
+        raise Exception(msg % (name, value))
 
     if not valid:
-        raise Exception("Value %s is not valid for parameter %s" % (value, name))
+        raise Exception("Value %s is not valid for parameter %s. %s" % \
+                (value, name, param.validator.__doc__ or 'error unknown'))
 
-    _parameters[name].value = value
-    _parameters[name].value_source = value_source
+    param.value = value
+    param.source = source
 
-def get(name, **kwargs):
+
+def get(name):
+    """Returns value of parameter."""
     name = name.lower()
 
     if name in _parameters:
         return _parameters[name].value
-    elif 'default' in kwargs:
-        return kwargs['default']
     else:
-       raise KeyError("Parameter %s not found." % name)
+        pass
+        raise KeyError("Parameter %s not found." % name)
+
 
 def read(filename):
+    """Reads parameter from config file.
+
+    Config files should conform to the format specified in the ConfigParser
+    module from Python's standard library. A Parameter's name has two parts:
+    the section and the option name.  These correspond to 'section' and
+    'option' as defined in ConfigParser. 
+    
+    For example, parameter 'foo.bar' would be specified in the config file as:
+
+        [foo]
+        bar = 5
+    
+    """
+
     config = ConfigParser()
     config.read(filename)
 
-    for section in config.sections() + ['DEFAULT']:
-        for name,value in config.items(section):
-            fullname = "%s.%s" % (section, name) if section != 'DEFAULT' else name
-            set(fullname, value, "config file %s" % filename)
+    errors = []
+    for section in config.sections():
+        for option,value in config.items(section):
+            name = "%s.%s" % (section, option)
+            try:
+                set(name, value, "config file %s" % filename)
+            except Exception, e:
+                errors.append(str(e))
+    
+    if errors:
+        errheader = "%d errors encountered:" % len(errors)
+        raise Exception("\n".join([errheader] + errors))
 
-def write(filename, including_defaults=False):
+def write(filename, include_defaults=False):
+    """Writes parameters to config file.
+
+    If include_default is True, writes all parameters. Else, only writes
+    parameters that were specifically set (via config file, command line, etc).
+
+    """
+
     config = ConfigParser()
-    params = _parameters if including_defaults else [p for p in _parameters.values() if p.value_source]
+    params = _parameters.values() if include_defaults \
+                                  else [p for p in _parameters.values() if p.source]
 
     for param in params:
-        config.set(param.section, param.attr_name, param.value)
+        config.set(param.section, param.option, param.value)
 
-    f = open(filename, 'w')
-    config.write(f)
-    f.close()
+    with file(filename, 'w') as f:
+        config.write(f)
 
-def list_parameters():
-    return [(p.name, p.value, p.description) for p in _parameters.values()]
 
-def apply_parameters(obj):
-    for param in obj.__parameters__:
-        setattr(obj, param.attr_name, param.value)
+def parameters(section=None):
+    """Returns list of parameters.
+
+    If section is specified, returns parameters for that section only.
+    """
+
+    if section:
+        return [p for p in _parameters.values() if p.section == section]
+    else:
+        return _parameters.values()
+
+
+def configobj(params):
+    """Given a list of parameters, returns a ConfigParser object.
+
+    This function can be used to convert a list of parameters to a config
+    object which can then be written to file.
+
+    """
+    if isinstance(params, list):
+        params = dict((p.name, p.value) for p in params)
+
+    configobj = ConfigParser()
+    for key,value in params.items():
+        section,name = key.strip().split('.')
+        if section not in configobj.sections():
+            configobj.add_section(section)
+        configobj.set(section, name, value)
+
+    return configobj

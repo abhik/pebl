@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='Pebl',
-    version='0.8.1',
+    version='0.9.0',
     description='Python Environment for Bayesian Learning',
     package_dir={'': 'src'},
     packages=find_packages('src'),
@@ -24,4 +24,11 @@ setup(
 
     # tests
     test_suite = 'nose.collector',
+
+    # scripts
+    entry_points = {
+        'console_scripts': [
+            'pebl = pebl:main'
+        ]
+    }
 )
