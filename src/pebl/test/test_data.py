@@ -1,214 +1,339 @@
-# set numpy.test to None so we don't run numpy's tests.
-from numpy import *
-test = None
+r"""
+=================
+Testing pebl.data
+=================
 
-from pebl import data 
+>>> from pebl import data
+>>> from pebl.test import testfile
+>>> import numpy as N
 
-TESTDATA1 = """samples	var 1	var 2	var 3
-sample 1	2.5!	!X	1.7
-sample 2	1.1	!1.7	2.3
-sample 3	4.2	999.3	12
+Testing basic file parsing
+---------------------------
+
+testfiles/testdata1.txt:
+
+var1	var2	var3
+2.5!	!X	1.7
+1.1	    !1.7	2.3
+4.2	999.3	12
+
+>>> data1 = data.fromfile(testfile('testdata1.txt'))
+>>> data1.observations
+array([[   2.5,    0. ,    1.7],
+       [   1.1,    1.7,    2.3],
+       [   4.2,  999.3,   12. ]])
+
+>>> data1.observations.dtype
+dtype('float64')
+
+>>> [v.name for v in data1.variables]
+['var1', 'var2', 'var3']
+
+>>> data1.missing
+array([[False,  True, False],
+       [False, False, False],
+       [False, False, False]], dtype=bool)
+
+>>> data1.interventions
+array([[ True,  True, False],
+       [False,  True, False],
+       [False, False, False]], dtype=bool)
+
+**If arity is not specified, pebl will no longer try to guess.**
+>>> [v.arity for v in data1.variables]
+[-1, -1, -1]
+
+
+Testing a more complex file parsing example
+-------------------------------------------
+
+testfiles/testdata2.txt:
+
+# comment line			
+"shh,discrete(2)"	"ptchp,discrete(3)"	"smo,continuous"	"outcome,class(good, bad)"
+
+0!	!0	1.25	good
+#comment in the data section			
+1	!1	1.1	bad
+1	2	0.45	bad
+
+>>> data2 = data.fromfile(testfile('testdata2.txt'))
+>>> data2.observations
+array([[ 0.  ,  0.  ,  1.25,  0.  ],
+       [ 1.  ,  1.  ,  1.1 ,  1.  ],
+       [ 1.  ,  2.  ,  0.45,  1.  ]])
+
+>>> data2.interventions
+array([[ True,  True, False, False],
+       [False,  True, False, False],
+       [False, False, False, False]], dtype=bool)
+
+>>> data2.variables[3].labels
+['good', 'bad']
+
+>>> [v.arity for v in data2.variables]
+[2, 3, -1, 2]
+
+>>> [v.name for v in data2.variables]
+['shh', 'ptchp', 'smo', 'outcome']
+
+
+Testing a file with sample names
+---------------------------------
+
+testfiles/testdata3.txt:
+
+	"shh,discrete(2)"	"ptchp,discrete(3)"
+sample1	0!	!0
+sample2	1	!1
+sample3	1	2
+
+>>> data3 = data.fromfile(testfile('testdata3.txt'))
+>>> data3.variables
+array([<DiscreteVariable: shh>, <DiscreteVariable: ptchp>], dtype=object)
+
+>>> data3.samples
+array([<Sample: sample1>, <Sample: sample2>, <Sample: sample3>], dtype=object)
+
+>>> data3.observations
+array([[0, 0],
+       [1, 1],
+       [1, 2]], dtype=int8)
+
+>>> [v.arity for v in data3.variables]
+[2, 3]
+
+Testing another file with sample names
+----------------------------------------
+
+testfiles/testdata4.txt (no tab before variable names):
+
+"shh,discrete(2)"	"ptchp,discrete(3)"	
+sample1	0!	!0
+sample2	1	!1
+sample3	1	2
+
+>>> data4 = data.fromfile(testfile('testdata4.txt'))
+>>> data4.variables
+array([<DiscreteVariable: shh>, <DiscreteVariable: ptchp>], dtype=object)
+
+>>> data4.observations
+array([[0, 0],
+       [1, 1],
+       [1, 2]], dtype=int8)
+
+
+Create a data object manually and test its features
+---------------------------------------------------
+
+>>> obs = N.array([[1.2, 1.4, 2.1, 2.2, 1.1],
+...                [2.3, 1.1, 2.1, 3.2, 1.3],
+...                [3.2, 0.0, 2.2, 2.5, 1.6],
+...                [4.2, 2.4, 3.2, 2.1, 2.8],
+...                [2.7, 1.5, 0.0, 1.5, 1.1],
+...                [1.1, 2.3, 2.1, 1.7, 3.2] ])
+... 
+>>> interventions = N.array([[0,0,0,0,0],
+...                          [0,1,0,0,0],
+...                          [0,0,1,1,0],
+...                          [0,0,0,0,0],
+...                          [0,0,0,0,0],
+...                          [0,0,0,1,0] ])
+... 
+>>> missing = N.array([[0,0,0,0,0],
+...                    [0,0,0,0,0],
+...                    [0,1,0,0,0],
+...                    [0,1,0,0,0],
+...                    [0,0,1,0,0],
+...                    [0,0,0,0,0] ])
+>>> variablenames = ["gene A", "gene B", "receptor protein C", " receptor D", "E kinase protein"]
+>>> samplenames = ["head.wt", "limb.wt", "head.shh_knockout", "head.gli_knockout", 
+...                "limb.shh_knockout", "limb.gli_knockout"]
+>>> data5 = data.Dataset(
+...           obs, 
+...           missing.astype(bool), 
+...           interventions.astype(bool),
+...           N.array([data.Variable(n) for n in variablenames]),
+...           N.array([data.Sample(n) for n in samplenames])
+... )
+
+
+>>> data5.variables
+array([<Variable: gene A>, <Variable: gene B>,
+       <Variable: receptor protein C>, <Variable:  receptor D>,
+       <Variable: E kinase protein>], dtype=object)
+
+>>> data5.samples
+array([<Sample: head.wt>, <Sample: limb.wt>, <Sample: head.shh_knockout>,
+       <Sample: head.gli_knockout>, <Sample: limb.shh_knockout>,
+       <Sample: limb.gli_knockout>], dtype=object)
+
+>>> data5.observations
+array([[ 1.2,  1.4,  2.1,  2.2,  1.1],
+       [ 2.3,  1.1,  2.1,  3.2,  1.3],
+       [ 3.2,  0. ,  2.2,  2.5,  1.6],
+       [ 4.2,  2.4,  3.2,  2.1,  2.8],
+       [ 2.7,  1.5,  0. ,  1.5,  1.1],
+       [ 1.1,  2.3,  2.1,  1.7,  3.2]])
+
+>>> data5.subset(variables=[0,2,4]).observations
+array([[ 1.2,  2.1,  1.1],
+       [ 2.3,  2.1,  1.3],
+       [ 3.2,  2.2,  1.6],
+       [ 4.2,  3.2,  2.8],
+       [ 2.7,  0. ,  1.1],
+       [ 1.1,  2.1,  3.2]])
+
+>>> data5.subset(samples=[0,2]).observations
+array([[ 1.2,  1.4,  2.1,  2.2,  1.1],
+       [ 3.2,  0. ,  2.2,  2.5,  1.6]])
+
+>>> data5.subset(variables=[0,2], samples=[1,2]).observations
+array([[ 2.3,  2.1],
+       [ 3.2,  2.2]])
+
+>>> data5_subset1 = data5.subset(variables=[1,2], samples=[2,3,4])
+
+>>> data5_subset1.observations
+array([[ 0. ,  2.2],
+       [ 2.4,  3.2],
+       [ 1.5,  0. ]])
+
+>>> data5_subset1.interventions
+array([[False,  True],
+       [False, False],
+       [False, False]], dtype=bool)
+
+>>> data5_subset1.missing
+array([[ True, False],
+       [ True, False],
+       [False,  True]], dtype=bool)
+
+>>> data5_subset1.variables
+array([<Variable: gene B>, <Variable: receptor protein C>], dtype=object)
+
+>>> data5_subset1.samples
+array([<Sample: head.shh_knockout>, <Sample: head.gli_knockout>,
+       <Sample: limb.shh_knockout>], dtype=object)
+
+>>> data5.missing.any()
+True
+
+>>> N.where(data5.missing)
+(array([2, 3, 4]), array([1, 1, 2]))
+
+>>> data5.missing[N.where(data5.missing)]
+array([ True,  True,  True], dtype=bool)
+
+>>> N.transpose(N.where(data5.missing))
+array([[2, 1],
+       [3, 1],
+       [4, 2]])
+
+
+Try discretizing data
+----------------------
+
+testfile/testdata5.txt:
+
+v1	v2	v3	v4	v5
+1.2	1.4	2.1	2.2	1.1
+2.3	1.1	2.1	3.2	1.3
+3.2	0	1.2	2.5	1.6
+4.2	2.4	3.2	2.1	2.8
+2.7	1.5	0	1.5	1.1
+1.1	2.3	2.1	1.7	3.2
+2.3	1.1	4.3	2.3	1.1
+3.2	2.6	1.9	1.7	1.1
+2.1	1.5	3	1.4	1.1
+
+>>> data5 = data.fromfile(testfile('testdata5.txt'))
+>>> data5.discretize()
+
+>>> [v.arity for v in data5.variables]
+[3, 3, 3, 3, 3]
+
+>>> data5.original_observations
+array([[ 1.2,  1.4,  2.1,  2.2,  1.1],
+       [ 2.3,  1.1,  2.1,  3.2,  1.3],
+       [ 3.2,  0. ,  1.2,  2.5,  1.6],
+       [ 4.2,  2.4,  3.2,  2.1,  2.8],
+       [ 2.7,  1.5,  0. ,  1.5,  1.1],
+       [ 1.1,  2.3,  2.1,  1.7,  3.2],
+       [ 2.3,  1.1,  4.3,  2.3,  1.1],
+       [ 3.2,  2.6,  1.9,  1.7,  1.1],
+       [ 2.1,  1.5,  3. ,  1.4,  1.1]])
+
+>>> data5.observations
+array([[0, 1, 1, 1, 0],
+       [1, 0, 1, 2, 1],
+       [2, 0, 0, 2, 2],
+       [2, 2, 2, 1, 2],
+       [1, 1, 0, 0, 0],
+       [0, 2, 1, 0, 2],
+       [1, 0, 2, 2, 0],
+       [2, 2, 0, 0, 0],
+       [0, 1, 2, 0, 0]], dtype=int8)
+
+**Note:** the discretization for the last column is not a maximum entropy
+distribution. That is because the default discretizer maps identical input
+values to identical output values. All 5 values of "1.1" in the original
+dataset map to "0" even though that leads to a non maximum-entropy
+distribution.
+
+>>> data5 = data.fromfile(testfile('testdata5.txt'))
+
+>>> data5.discretize(includevars=[0,2])
+
+>>> data5.observations
+array([[ 0. ,  1.4,  1. ,  2.2,  1.1],
+       [ 1. ,  1.1,  1. ,  3.2,  1.3],
+       [ 2. ,  0. ,  0. ,  2.5,  1.6],
+       [ 2. ,  2.4,  2. ,  2.1,  2.8],
+       [ 1. ,  1.5,  0. ,  1.5,  1.1],
+       [ 0. ,  2.3,  1. ,  1.7,  3.2],
+       [ 1. ,  1.1,  2. ,  2.3,  1.1],
+       [ 2. ,  2.6,  0. ,  1.7,  1.1],
+       [ 0. ,  1.5,  2. ,  1.4,  1.1]])
+
+>>> data5 = data.fromfile(testfile('testdata5.txt'))
+
+>>> data5.discretize(excludevars=[0,1])
+
+>>> data5.observations
+array([[ 1.2,  1.4,  1. ,  1. ,  0. ],
+       [ 2.3,  1.1,  1. ,  2. ,  1. ],
+       [ 3.2,  0. ,  0. ,  2. ,  2. ],
+       [ 4.2,  2.4,  2. ,  1. ,  2. ],
+       [ 2.7,  1.5,  0. ,  0. ,  0. ],
+       [ 1.1,  2.3,  1. ,  0. ,  2. ],
+       [ 2.3,  1.1,  2. ,  2. ,  0. ],
+       [ 3.2,  2.6,  0. ,  0. ,  0. ],
+       [ 2.1,  1.5,  2. ,  0. ,  0. ]])
+
+>>> [v.arity for v in data5.variables]
+[-1, -1, 3, 3, 3]
+
+
+Try out the arity checking feature
+----------------------------------
+
+If the arity specified for a variable is less than the number of unique values,
+pebl should raise an exception:
+
+>>> data6 = data.fromfile(testfile('testdata6.txt'))
+Traceback (most recent call last):
+IncorrectArityError
+
+If the arity specified is more than the number of unique values, that is fine:
+
+>>> data7 = data.fromfile(testfile('testdata7.txt'))
+>>> [v.arity for v in data7.variables]
+[3, 4, 3, 6]
+
 """
 
-class TestFileParsing:
-    def setUp(self):
-        # don't want tests to depend on external data files (makes running tests from setuptools more difficult)
-        f = open("testdata1.txt", 'w')
-        f.write(TESTDATA1)
-        f.close()
+if __name__ == '__main__':
+    from pebl.test import run
+    run()
 
-        self.data = data.fromfile("testdata1.txt", header=True, sampleheader=True)        
-
-    def tearDown(self):
-        try:
-            os.unlink("testdata1.txt")
-        except:
-            pass
-
-    def test_basic_parsing(self):
-        assert self.data[0][0] == 2.5, "Parsing values."
-        assert self.data[0][2] == 1.7, "Parsing values."
-        assert self.data[2][1] == 999.3, "Parsing values."
-        assert self.data[2][2] == 12.0, "Parsing values: convert to float."
-
-    def test_interventions(self):
-        assert self.data.interventions_for_sample(0) == [0, 1], "Parsing interventions (! before/after value)."
-        assert self.data.interventions_for_sample(1) == [1], "Parsing interventions (! before value)."
-
-    def test_missingvals(self):
-        assert self.data.missingvals[0][0] == False, "Parsing missingvals."
-        assert self.data.missingvals[0][1] == True, "Parsing missingvals."
-
-    def test_interventions_and_missingvals(self):
-        result1 = self.data.missingvals[0][1] 
-        result2 = self.data.interventions_for_sample(0)
-        assert (result1 == True and result2 == [0, 1]), "Parsing both interventions and missingvals (! and X) for the same value."
-
-
-
-
-def _create_data_mockup():
-    a = array([[1.2, 1.4, 2.1, 2.2, 1.1],
-               [2.3, 1.1, 2.1, 3.2, 1.3],
-               [3.2, 0.0, 2.2, 2.5, 1.6],
-               [4.2, 2.4, 3.2, 2.1, 2.8],
-               [2.7, 1.5, 0.0, 1.5, 1.1],
-               [1.1, 2.3, 2.1, 1.7, 3.2]
-              ])
-
-    dat = data.PeblData(a.shape, buffer=a, dtype=a.dtype)
-    dat.interventions = array([[0,0,0,0,0],
-                                     [0,1,0,0,0],
-                                     [0,0,1,1,0],
-                                     [0,0,0,0,0],
-                                     [0,0,0,0,0],
-                                     [0,0,0,1,0] ])
-    
-    dat.missingvals = array([[0,0,0,0,0],
-                                   [0,0,0,0,0],
-                                   [0,1,0,0,0],
-                                   [0,1,0,0,0],
-                                   [0,0,1,0,0],
-                                   [0,0,0,0,0] ])
-    
-    dat._calculate_arities()
-    dat.variablenames = array(["gene A", "gene B", "receptor protein C", " receptor D", "E kinase protein"])
-    dat.samplenames = array(["head.wt", "limb.wt", "head.shh_knockout", "head.gli_knockout", 
-                             "limb.shh_knockout", "limb.gli_knockout"])
-
-    return dat
-
-
-class TestDataObject:
-    """ Test PeblData's methods and properties.
-
-    We create a PeblData manually -- not testing file parsing here.
-    
-    """
-    
-    def setUp(self):
-        self.data = _create_data_mockup()
-
-    def tearDown(self):
-        pass
-
-    def test_numvariables(self):
-        assert self.data.numvariables == 5, "Data has 5 variables."
-
-    def test_numsamples(self):
-        assert self.data.numsamples == 6, "Data has 6 samples."
-
-    def test_subsetting_byvar(self):
-        assert (self.data.subset(variables=[0,2,4]) == self.data.take([0,2,4], axis=1)).all(), "Subsetting data by variables."
-        
-    def test_subsetting_bysample(self):
-        assert (self.data.subset(samples=[0,2]) == self.data.take([0,2], axis=0)).all(), "Subsetting data by samples."
-    
-    def test_subsetting_byboth(self):
-        assert (self.data.subset(variables=[0,2], samples=[1,2]) == self.data[[1,2]][:,[0,2]]).all(), "Subsetting data by variable and sample."
-
-    def test_subsetting_missingvals(self):
-        subset = self.data.subset(variables=[1,2], samples=[2,3,4])
-        assert (subset.missingvals == self.data.missingvals[[2,3,4]][:,[1,2]]).all(), "Missingvals in data subset."
-
-    def test_subsetting_interventions(self):
-        subset = self.data.subset(variables=[1,2], samples=[2,3,4])
-        assert (subset.interventions == self.data.interventions[[2,3,4]][:,[1,2]]).all(), "Interventions in data subset."
-
-    def test_subsetting_variablenames(self):
-        subset = self.data.subset(variables=[1,2], samples=[2,3,4])
-        assert subset.variablenames.tolist() == ["gene B", "receptor protein C"], "Variable names in data subset."
-
-    def test_subsetting_samplenames(self):
-        subset = self.data.subset(variables=[1,2], samples=[2,3,4])
-        assert subset.samplenames.tolist() == ["head.shh_knockout", "head.gli_knockout", "limb.shh_knockout"], "Sample names in data subset."
-
-    def test_has_missingvals(self):
-        assert self.data.has_missingvals, "Check for missing values."
-
-    def test_missingvals_indices(self):
-        # [1,2,3] != [3,1,2] BUT set([1,2,3]) == set([3,1,2]) because sets have no ordering.
-        missingset = set(self.data.indices_of_missingvals)
-        assert missingset == set([(2,1), (3,1), (4,2)]), "Missing mask as (row,col) indices."
-
-    def test_num_missingvals_forvariable(self):
-        assert self.data.num_missingvals_for_variable(1) == 2, "Missing values for variable."
-
-    def test_num_missingvals_forsample(self):
-        assert self.data.num_missingvals_for_sample(3) == 1, "Missing values for sample."
-
-    def test_num_missingvals_forsample2(self):
-        assert self.data.num_missingvals_for_sample(0) == 0, "Missing values for sample."
-        
-    def test_interventions_for_sample(self):
-        assert self.data.interventions_for_sample(2) == [2,3], "Interventions for sample."
-
-    def test_noninterventions_for_sample(self):
-        assert self.data.noninterventions_for_sample(2) == [0,1,4], "Non-interventions for sample."
-
-    def test_interventions_for_variable(self):
-        assert self.data.interventions_for_variable(3) ==  [2,5], "Interventions for variable."
-
-    def test_noninterventions_for_variable(self):
-        assert self.data.noninterventions_for_variable(3) == [0,1,3,4], "Non-interventions for varible."
-
-    def test_variables_byname_simple(self):
-        assert self.data.variables_byname("gene B") == 1, "Retrieving variables by name."
-
-    def test_variables_byname_regexp(self):
-        assert set(self.data.variables_byname(namelike="gene.*")) == set([0,1]), "Retrieving variables using regexp."
-    
-    def test_variables_byname_regexp2(self):
-        assert set(self.data.variables_byname(namelike=".*protein.*")) == set([2,4]), "Retrieving variables by regexp."
-
-    def test_samples_byname_simple(self):
-        assert self.data.samples_byname("head.wt") == 0, "Retrieving samples by name."
-
-    def test_samples_byname_regexp(self):
-        assert set(self.data.samples_byname(namelike="head.*")) == set([0,2,3]), "Retrieving samples by name."
-
-    def test_subsetting_byname(self):
-        assert (self.data.subset(samples=self.data.samples_byname(namelike="head.*")) == self.data[[0,2,3]]).all(), "Subsetting data by sample names."
-
-
-class TestDiscretizing:
-    """Test data discretization."""
-
-    def setUp(self):
-        a = array([[1.2, 1.4, 2.1, 2.2, 1.1],
-                   [2.3, 1.1, 2.1, 3.2, 1.3],
-                   [3.2, 0.0, 1.2, 2.5, 1.6],
-                   [4.2, 2.4, 3.2, 2.1, 2.8],
-                   [2.7, 1.5, 0.0, 1.5, 1.1],
-                   [1.1, 2.3, 2.1, 1.7, 3.2],
-                   [2.3, 1.1, 4.3, 2.3, 1.1],
-                   [3.2, 2.6, 1.9, 1.7, 1.1],
-                   [2.1, 1.5, 3.0, 1.4, 1.1]
-              ])
-
-        self.data = data.PeblData(a.shape, buffer=a, dtype=a.dtype)
-
-    def tearDown(self):
-        pass
-
-    def test_basic_discretizing(self):
-        newdata = data.discretize_variables(self.data, numbins=3)
-        assert newdata[:,1].tolist() == [1, 0, 0, 2, 1, 2, 0, 2, 1], "Discretizing without any parameters."
-
-    def test_resulting_arities(self):
-        newdata = data.discretize_variables(self.data, numbins=3)
-        assert newdata.arities[2] == 3, "Arities of discretized data."
-
-    def test_discretizing_with_many_equal_values(self):
-        newdata = data.discretize_variables(self.data, numbins=3)
-        assert newdata[:,4].tolist() == [0, 1, 2, 2, 0, 2, 0, 0, 0], "Discretizing with many equal values."
-
-    def test_includevars(self):
-        newdata = data.discretize_variables(self.data, numbins=3, includevars=[0,2])
-        assert newdata[:,1].tolist() == self.data[:,1].tolist(), "Don't discretize variable if not in includevars."
-        assert newdata[:,2].tolist() == [1, 1, 0, 2, 0, 1, 2, 0, 2], "Discretize variable if in includevars."
-
-    def test_excludevars(self):
-        newdata = data.discretize_variables(self.data, numbins=3, excludevars=[0,1])
-        assert newdata[:,1].tolist() == self.data[:,1].tolist(), "Don't discretize variable if in excludevars."
-        assert newdata[:,2].tolist() == [1, 1, 0, 2, 0, 1, 2, 0, 2], "Discretize variable if not in excludevars."
