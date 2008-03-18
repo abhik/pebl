@@ -1,10 +1,6 @@
-# Want code to be py2.4 compatible. So, can't use relative imports.
-import sys
-sys.path.insert(0, "../")
-
 import os, os.path
-import data, network
-from learner import greedy
+from pebl import data, network
+from pebl.learner import greedy
 
 def benchmark_datafiles(dir=None):
     benchdata_dir = dir or os.path.join(os.path.dirname(__file__), "benchdata")

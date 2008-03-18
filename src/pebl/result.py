@@ -13,8 +13,8 @@ from pebl import posterior, config
 from pebl.util import flatten
 from pebl.network import Network
 
-class _ScoredNetwork(Network):
-    """A struct for representing scored networks.
+class ScoredNetwork(Network):
+    """A class  for representing scored networks.
     
     Supports comparision of networks based on score (good for sorting).
     Also supports equality checking based on first checking score equality
@@ -30,8 +30,11 @@ class _ScoredNetwork(Network):
         return cmp(self.score, other.score)
 
     def __eq__(self, other):
-        return self.score == other.score and self.edges == other.edges
+        return self.score == other.score and \
+               (self.edges.adjacency_matrix == other.edges.adjacency_matrix).all()
 
+    def __hash__(self):
+        return hash(self.edges.adjacency_matrix.tostring())
 
 class LearnerResult:
     """Class for storing any and all output of a learner.
@@ -69,6 +72,7 @@ class LearnerResult:
         self.nodes = self.data.variables if self.data else None
         self.size = size or config.get('result.numnetworks')
         self.networks = []
+        self.nethashes = {}
 
     def start_run(self):
         """Indicates that the learner is starting a new run."""
@@ -80,16 +84,21 @@ class LearnerResult:
 
     def add_network(self, net, score):
         """Add a network and score to the results."""
-
         nets = self.networks
-        scorednet = _ScoredNetwork(net.edges, score)
+        nethashes = self.nethashes
+        scorednet = ScoredNetwork(net.edges, score)
 
         if self.size == 0 or len(nets) < self.size:
-            if scorednet not in nets:
-                insort(nets, deepcopy(scorednet))
-        elif scorednet.score > nets[0].score and scorednet not in nets:
+            if scorednet not in nethashes:
+                newnet = deepcopy(scorednet)
+                insort(nets, newnet)
+                nethashes[newnet] = 1
+        elif scorednet.score > nets[0].score and scorednet not in nethashes:
+            newnet = deepcopy(scorednet)
+            nethashes.pop(nets[0])
             nets.remove(nets[0])
-            insort(nets, deepcopy(scorednet))
+            insort(nets, newnet)
+            nethashes[newnet] = 1
 
     def tofile(self, filename=None):
         filename = filename or config.get('result.filename')

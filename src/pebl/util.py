@@ -135,20 +135,13 @@ def nestediter(lst1, lst2):
 
 
 def cartesian_product(list_of_lists):
-    """Given n lists, generate all n-tuple combinations.
+    """Given n lists (or sets), generate all n-tuple combinations.
 
     >>> list(cartesian_product([[0,1], [0,1,"foo"]]))
-     [[0, 0], [0, 1], [0, 'foo'], [1, 0], [1, 1], [1, 'foo']]
+    [(0, 0), (0, 1), (0, 'foo'), (1, 0), (1, 1), (1, 'foo')]
 
      >>> list(cartesian_product([[0,1], [0,1], [0,1]]))
-     [[0, 0, 0],
-     [0, 0, 1],
-     [0, 1, 0],
-     [0, 1, 1],
-     [1, 0, 0],
-     [1, 0, 1],
-     [1, 1, 0],
-     [1, 1, 1]]
+     [(0, 0, 0), (0, 0, 1), (0, 1, 0), (0, 1, 1), (1, 0, 0), (1, 0, 1), (1, 1, 0), (1, 1, 1)]
     
     """
 

@@ -63,13 +63,18 @@ class SimulatedAnnealingLearner(Learner):
         self.max_iters_at_temp = max_iters_at_temp or \
                                  config.get('simanneal.max_iters_at_temp')
 
-        self._set_seed(seed, 'simanneal.seed')
+        self.seed = seed or \
+                    network.Network(self.data.variables,
+                                    config.get('simanneal.seed'))
+
 
     def run(self):
         self.stats = SALearnerStatistics(self.start_temp, self.delta_temp, 
                                          self.max_iters_at_temp)
         self.result =  result.LearnerResult(self)
         self.evaluator = evaluator.fromconfig(self.data, self.seed, self.prior)
+        self.evaluator.set_network(self.seed.copy())
+
         self.result.start_run()
         curscore = self.evaluator.score_network()
         

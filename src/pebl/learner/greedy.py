@@ -19,6 +19,10 @@ class GreedyLearnerStatistics:
 def default_stopping_criteria(stats):
     return stats.iterations > 1000
 
+def default_restarting_criteria(stats):
+    return stats.unimproved_iterations > 500
+
+# 3/18/08: change to stop _after_iterations()?? 'max' is unneeded
 def stop_after_max_iterations(max_iterations):
     return lambda stats: stats.iterations > max_iterations
 
@@ -39,6 +43,12 @@ class GreedyLearner(Learner):
         default='default_stopping_criteria'
     )
 
+    _prestart = config.StringParameter(
+        'greedy.restarting_criteria',
+        """Restarting criteria for the GreedyLearner.""",
+        default='default_restarting_criteria'
+    )
+
     _pseed = config.StringParameter(
         'greedy.seed',
         'Starting network for a greedy search.',
@@ -46,38 +56,50 @@ class GreedyLearner(Learner):
     )
 
     def __init__(self, data_=None, prior_=None, stopping_criteria=None, 
-                 seed=None):
+                 restarting_criteria=None, seed=None):
         super(GreedyLearner, self).__init__(data_, prior_)
+
         self.stopping_criteria = \
             stopping_criteria or \
             eval(config.get('greedy.stopping_criteria'))
-        self._set_seed(seed, 'greedy.seed')
+
+        self.restarting_criteria = \
+            restarting_criteria or \
+            eval(config.get('greedy.restarting_criteria'))
+
+        self.seed = seed or \
+                    network.Network(self.data.variables, 
+                                    config.get('greedy.seed'))
 
     def run(self):
         self.stats = GreedyLearnerStatistics()
         self.result = result.LearnerResult(self)
         self.evaluator = evaluator.fromconfig(self.data, self.seed, self.prior)
-        stopping_criteria = self.stopping_criteria
-        
+        self.evaluator.set_network(self.seed.copy())
+
         self.result.start_run()
         first = True
-        while not stopping_criteria(self.stats):
-            self._run_without_restarts(stopping_criteria, rndnet=False)
+        while not self.stopping_criteria(self.stats):
+            self._run_without_restarts(self.restarting_criteria, 
+                                       randomize_net=(not first))
             first = False
         
         self.result.stop_run()
         return self.result
 
-    def _run_without_restarts(self, stopping_criteria, rndnet=True):
+    def _run_without_restarts(self, restarting_criteria, randomize_net=True):
         self.stats.restarts += 1
-        if rndnet:
+        #print "# Doing a restart", self.stats.iterations
+        self.stats.unimproved_iterations = 0
+
+        if randomize_net:
             self.evaluator.randomize_network()
-        
+         
         # set the default best score
         self.stats.best_score = self.evaluator.score_network()
 
-        # continue learning till the stopping criteria is met (function returns True)
-        while not stopping_criteria(self.stats):
+        # continue learning until the stopping criteria is met
+        while not restarting_criteria(self.stats):
             self.stats.iterations += 1
 
             try:
@@ -87,12 +109,13 @@ class GreedyLearner(Learner):
             
             self.result.add_network(self.evaluator.network, curscore)
 
-            if curscore < self.stats.best_score:
+            if curscore <= self.stats.best_score:
                 # score did not improve, undo network alteration
                 self.stats.unimproved_iterations += 1
                 self.evaluator.restore_network()
+                #print '.', curscore
             else:
                 self.stats.best_score = curscore
                 self.stats.unimproved_iterations = 0
- 
+                #print 'X', curscore
 

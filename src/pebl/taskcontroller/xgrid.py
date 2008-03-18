@@ -2,8 +2,13 @@ import time
 import os.path
 import shutil 
 import tempfile
-import xg
 
+try:
+    import xg
+    XG_LOADED = True
+except:
+    XG_LOADED = False
+    
 from pebl import config, result
 from pebl.taskcontroller.base import _BaseController, DeferredResult
 
@@ -80,9 +85,12 @@ class XgridController(_BaseController):
 
     @property
     def _grid(self):
-        cn = xg.Connection(self.controller, self.password)
-        ct = xg.Controller(cn)
-        return ct.grid(self.gridnum)
+        if XG_LOADED:
+            cn = xg.Connection(self.controller, self.password)
+            ct = xg.Controller(cn)
+            return ct.grid(self.gridnum)
+
+        return None
 
     #
     # Public interface

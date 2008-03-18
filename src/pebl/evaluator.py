@@ -15,9 +15,10 @@ methods), networks will be scored efficiently.
 """
 
 from numpy import *
+import random as stdlib_random
+
 from pebl import data, cpd, prior,config, network
 from pebl.config import IntParameter, StringParameter
-import random as stdlib_random
 from pebl.util import *
 
 random.seed()
@@ -109,6 +110,8 @@ class NetworkEvaluator(object):
         self.network = net or self.network
         return self._score_network_core()
 
+    set_network = score_network
+
     def alter_network(self, add=[], remove=[]):
         self.network.edges.add_many(add)
         self.network.edges.remove_many(remove)
@@ -189,8 +192,11 @@ class SmartNetworkEvaluator(NetworkEvaluator):
         """Alter the network while retaining the ability to *quickly* undo the changes."""
 
         # make the required changes
-        self.network.edges.add_many(add)    
+        # MUST remove existing edges before adding new ones. 
+        #   if edge e is in `add`, `remove` and `self.network`, 
+        #   it should exist in the new network. (the add and remove cancel out.
         self.network.edges.remove_many(remove)
+        self.network.edges.add_many(add)    
 
         # check whether changes lead to valid DAG (raise error if they don't)
         if not self.network.is_acyclic():
@@ -209,7 +215,8 @@ class SmartNetworkEvaluator(NetworkEvaluator):
         return self.score
        
     def randomize_network(self):
-        newnet = self.network.copy().randomize()
+        newnet = network.Network(self.network.nodes)
+        newnet.randomize()
         return self.score_network(newnet)
 
     def clear_network(self):

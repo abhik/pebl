@@ -2,7 +2,6 @@ import time
 import os.path
 import shutil 
 import tempfile
-import xg
 
 from pebl import config, result
 from pebl.taskcontroller.base import _BaseController, DeferredResult

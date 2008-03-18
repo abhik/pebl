@@ -7,8 +7,8 @@ from itertools import izip
 import pydot
 import numpy as N
 
-import network
-from util import *
+from pebl import network
+from pebl.util import *
 
 
 class Posterior(object):
@@ -59,7 +59,7 @@ class Posterior(object):
     def consensus_network(self, threshold=.3):
         """Return a consensus network with the given threshold."""
 
-        features = self._consensus_matrix()
+        features = self.consensus_matrix
         features[features >= threshold] = 1
         features[features < threshold] = 0
         features = features.astype(bool)
@@ -76,13 +76,14 @@ class Posterior(object):
         lscores = rescale_logvalues(self.scores)
         return -N.sum(N.exp(lscores)*lscores)
 
-    #
-    # Private and special interfaces
-    #
-    def _consensus_matrix(self):
+    @property
+    def consensus_matrix(self):
         norm_scores = normalize(N.exp(rescale_logvalues(self.scores)))
         return sum(n*s for n,s in zip(self.adjacency_matrices, norm_scores))
 
+    #
+    # Special interfaces
+    #
     def __iter__(self):
         """Iterate over the networks in the posterior in sorted order."""
         for adjmat,score in zip(self.adjacency_matrices, self.scores):

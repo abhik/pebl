@@ -21,10 +21,10 @@ import os
 import pydot
 import numpy as N
 
-from util import *
-from networkutil import *
-import config
-from config import StringParameter, oneof
+from pebl.util import *
+from pebl.networkutil import *
+from pebl import config
+from pebl.config import StringParameter, oneof
 
 #
 # Classes for storing collection of edges
@@ -316,7 +316,7 @@ class Network(object):
             self.edges = MatrixEdgeList(num_nodes=len(self.nodes))
             if isinstance(edges, list):
                 self.edges.add_many(edges)
-            elif isinstance(edges, str):
+            elif isinstance(edges, str) and edges:
                 edges = edges.split(';')
                 edges = [tuple([int(n) for n in e.split(',')]) for e in edges]
                 self.edges.add_many(edges)

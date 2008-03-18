@@ -73,6 +73,21 @@ Getting the Posterior
 >>> list(mpost[0].edges)
 [(0, 2), (0, 4), (1, 2), (2, 3), (3, 4)]
 
+Testing the Posterior
+---------------------
+>>> len(mpost)
+7
+>>> mpost[0].score
+-5.5
+>>> mpost[:2][1].score
+-6.0
+>>> mpost.entropy
+0.52271400039735116
+>>> mpost.consensus_network(.5).as_string()
+'0,2;0,4;1,2;2,3;3,4'
+>>> mpost.consensus_network(.8).as_string()
+'1,2;2,3;3,4'
+
 """
 
 if __name__ == '__main__':

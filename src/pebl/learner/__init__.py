@@ -47,14 +47,19 @@ _ptasks = config.IntParameter(
 class Learner(Task):
     def __init__(self, data_=None, prior_=None, **kw):
         self.data = data_ or data.fromconfig()
-        self.network = network.fromdata(data_)
         self.prior = prior_ or prior.fromconfig()
         self.__dict__.update(kw)
 
         # parameters
         self.numtasks = config.get('learner.numtasks')
 
+        # stats
+        self.reverse = 0
+        self.add = 0
+        self.remove = 0
+
     def _alter_network_randomly_and_score(self):
+        net = self.evaluator.network
         n_nodes = self.data.variables.size
         max_attempts = n_nodes**2
 
@@ -62,10 +67,10 @@ class Learner(Task):
         for i in xrange(max_attempts):
             startnode, endnode = N.random.random_integers(0, n_nodes-1, 2)    
         
-            if (startnode, endnode) in self.network.edges:
+            if (startnode, endnode) in net.edges:
                 # start_node -> end_node already exists, so reverse it.    
                 add,remove = [(startnode, endnode)], [(endnode, startnode)]
-            elif (endnode, startnode) in self.network.edges:
+            elif (endnode, startnode) in net.edges:
                 # start_node <- end_node exists, so remove it
                 add,remove = [], [(endnode, startnode)]
             else:
@@ -73,38 +78,48 @@ class Learner(Task):
                 add,remove =  [(startnode, endnode)], []
             
             try:
-                return self.evaluator.alter_network(add=add, remove=remove)
+                score = self.evaluator.alter_network(add=add, remove=remove)
             except evaluator.CyclicNetworkError:
-                continue
+                continue # let's try again!
+            else:
+                if add and remove:
+                    self.reverse += 1
+                elif add:
+                    self.add += 1
+                else:
+                    self.remove += 1
+                return score
 
-        # Could not find a valid network after 100 attempts  
+        # Could not find a valid network  
         raise CannotAlterNetworkException() 
 
     def _all_changes(self):
+        net = self.evaluator.network
         changes = []
 
         # edge removals
-        changes.extend((None, edge) for edge in self.network.edges)
+        changes.extend((None, edge) for edge in net.edges)
 
         # edge reversals
         reverse = lambda edge: (edge[1], edge[0])
-        changes.extend((reverse(edge), edge) for edge in self.network.edges)
+        changes.extend((reverse(edge), edge) for edge in net.edges)
 
         # edge additions
-        nz = nonzero(invert(self.network.edges.adjacency_matrix))
+        nz = nonzero(invert(net.edges.adjacency_matrix))
         changes.extend( ((src,dest), None) for src,dest in zip(*nz) )
 
         return changes
 
     def _set_seed(self, seed, paramname):
+        net = self.evaluator.network
         configseed = config.get(paramname)
         if seed:
             self.seed = seed
         elif configseed:
-            self.seed = network.Network(self.network.nodes, configseed)
+            self.seed = network.Network(net.nodes, configseed)
         else:
-            self.network.randomize()
-            self.seed = self.network
+            net.randomize()
+            self.seed = net
 
     def toconfig(self):
         params = inspect.getmembers(self, lambda x: isinstance(x, config.Parameter))
