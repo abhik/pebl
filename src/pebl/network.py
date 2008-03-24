@@ -17,6 +17,7 @@ import re
 import tempfile
 import subprocess
 import os
+from copy import copy
 
 import pydot
 import numpy as N
@@ -110,6 +111,9 @@ class EdgeList(object):
     def __eq__(self, other):
         return self.nodes == other.nodes and self.edges == other.edges
 
+    def __len__(self):
+        pass
+
 
 class SparseEdgeList(EdgeList):
     """
@@ -125,9 +129,17 @@ class SparseEdgeList(EdgeList):
 
     """
 
-    def __init__(self, num_nodes=0):
+    def __init__(self, num_nodes=0, adjacency_matrix=None):
+        num_nodes = len(adjacency_matrix) if adjacency_matrix is not None else num_nodes
+
         self._outgoing = [[] for i in xrange(num_nodes)]
         self._incoming = [[] for i in xrange(num_nodes)] 
+
+
+        if adjacency_matrix is not None:
+            for src, dest in zip(*N.nonzero(self.adjacency_matrix)):
+                self._outgoing[src].append(dest)
+                self._incoming[dest].append(src)
 
     def _resize(self, num_nodes):
         """Resize the internal indices."""
@@ -175,7 +187,8 @@ class SparseEdgeList(EdgeList):
         edges = N.zeros((size, size), dtype=bool)
        
         selfedges = list(self)
-        edges[unzip(selfedges)] = True
+        if selfedges:
+            edges[unzip(selfedges)] = True
 
         return edges
     
@@ -186,6 +199,9 @@ class SparseEdgeList(EdgeList):
             return dest in self._outgoing[src]
         except IndexError:
             return False
+
+    def __len__(self):
+        return sum(len(out) for out in self._outgoing)
 
 
 class MatrixEdgeList(EdgeList):
@@ -231,12 +247,10 @@ class MatrixEdgeList(EdgeList):
             pass # if edge does not exist, ignore error silently.
 
     def incoming(self, node):
-        inc = N.nonzero(self.adjacency_matrix[:,node].flatten())
-        return inc[0].tolist()
+        return self.adjacency_matrix[:,node].nonzero()[0].tolist()
 
     def outgoing(self, node):
-        outg = N.nonzero(self.adjacency_matrix[node].flatten())
-        return outg[0].tolist()
+        return self.adjacency_matrix[node].nonzero()[0].tolist()
     
     parents = incoming
     children = outgoing
@@ -253,6 +267,58 @@ class MatrixEdgeList(EdgeList):
     
     def __eq__(self, other):
         return (self.adjacency_matrix == other.adjacency_matrix).all()
+
+    def __len__(self):
+        return self.adjacency_matrix.nonzero()[0].size
+
+
+class MatrixEdgeList__PythonListImplementation(MatrixEdgeList):
+    def __init__(self, num_nodes=0, adjacency_matrix=None):
+        self.num_nodes = num_nodes or len(adjacency_matrix)
+        if adjacency_matrix is not None:
+            self.adjacency_matrix = adjacency_matrix
+        else:
+            self.adjacency_matrix = [[False for i in xrange(num_nodes)] for j in xrange(num_nodes)]
+        
+    def _resize(self, num_nodes):
+        self.adjacency_matrix = [[False for i in xrange(num_nodes)] for j in xrange(num_nodes)]
+
+    def clear(self):
+        num_nodes = self.num_nodes
+        self.adjacency_matrix = [[False for i in xrange(num_nodes)] for j in xrange(num_nodes)]
+        
+    def add(self, edge):
+        self.adjacency_matrix[edge[0]][edge[1]] = True
+
+    def remove(self, edge):
+        self.adjacency_matrix[edge[0]][edge[1]] = False
+
+    def incoming(self, node):
+       return [i for i in xrange(self.num_nodes) if self.adjacency_matrix[i][node]]
+
+    def outgoing(self, node):
+       return [i for i in xrange(self.num_nodes) if self.adjacency_matrix[node][i]]
+
+    parents = incoming
+    children = outgoing
+
+    def __iter__(self):
+        am = self.adjacency_matrix
+        nodes = range(self.num_nodes)
+        return ((i,j) for i in nodes for j in nodes if am[i][j]) 
+
+    def __contains__(self, edge): 
+        try:
+            return self.adjacency_matrix[edge[0]][edge[1]]
+        except:
+            return False
+
+    def __eq__(self, other):
+        self.adjacency_matrix == other.adjacency_matrix
+
+    def __len__(self):
+        return sum(row.count(True) for row in self.adjacency_matrix)
+
 
 #
 # Pebl's network class
@@ -306,7 +372,7 @@ class Network(object):
         """
         
         self.nodes = nodes
-       
+
         # add edges
         if isinstance(edges, EdgeList):
             self.edges = edges

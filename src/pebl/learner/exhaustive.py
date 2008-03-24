@@ -17,9 +17,10 @@ class ListLearner(Learner):
         super(ListLearner, self).__init__(data_, prior_)
         self.iterable = iterable
         if not self.iterable:
-            _net = lambda s: network.Network(self.data.variables, s)
+            variables = self.data.variables
+            _net = lambda netstr: network.Network(variables, netstr)
             netstrings = config.get('listlearner.networks').splitlines()
-            self.iterable = [_net(s) for s in netstrings if s]
+            self.iterable = (_net(s) for s in netstrings if s)
 
     def run(self):
         iterable = self.iterable
@@ -41,7 +42,8 @@ class ListLearner(Learner):
             )
         
         nets = list(self.iterable)
-        configobj = super(ExactEnumerationLearner, self).toconfig()
+        configobj = super(ListLearner, self).toconfig()
+
         if not configobj.has_section('listlearner'):
             configobj.add_section('listlearner')
         configobj.set('listlearner', 'networks', 
@@ -60,8 +62,6 @@ class ListLearner(Learner):
             indices.pop(-1)
             indices[-1][1] = numnets-1
 
-        return [ExactEnumerationLearner(self.data, self.prior, nets[i:j]) \
-                    for i,j in indices
-               ]
+        return [ListLearner(self.data, self.prior, nets[i:j])for i,j in indices]
 
 

@@ -65,17 +65,17 @@ class Learner(Task):
 
         # continue making changes and undoing them till we get an acyclic network
         for i in xrange(max_attempts):
-            startnode, endnode = N.random.random_integers(0, n_nodes-1, 2)    
+            node1, node2 = N.random.random_integers(0, n_nodes-1, 2)    
         
-            if (startnode, endnode) in net.edges:
-                # start_node -> end_node already exists, so reverse it.    
-                add,remove = [(startnode, endnode)], [(endnode, startnode)]
-            elif (endnode, startnode) in net.edges:
-                # start_node <- end_node exists, so remove it
-                add,remove = [], [(endnode, startnode)]
+            if (node1, node2) in net.edges:
+                # node1 -> node2 exists, so reverse it.    
+                add,remove = [(node2, node1)], [(node1, node2)]
+            elif (node2, node1) in net.edges:
+                # node2 -> node1 exists, so remove it
+                add,remove = [], [(node2, node1)]
             else:
-                # start_node and end_node unconnected, so connect them
-                add,remove =  [(startnode, endnode)], []
+                # node1 and node2 unconnected, so connect them
+                add,remove =  [(node1, node2)], []
             
             try:
                 score = self.evaluator.alter_network(add=add, remove=remove)
@@ -105,7 +105,7 @@ class Learner(Task):
         changes.extend((reverse(edge), edge) for edge in net.edges)
 
         # edge additions
-        nz = nonzero(invert(net.edges.adjacency_matrix))
+        nz = N.nonzero(invert(net.edges.adjacency_matrix))
         changes.extend( ((src,dest), None) for src,dest in zip(*nz) )
 
         return changes

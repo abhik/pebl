@@ -1,3 +1,4 @@
+0,discrete(3)	1,discrete(3)	2,discrete(3)	3,discrete(3)	4,discrete(3)	5,discrete(3)	6,discrete(3)	7,discrete(3)	8,discrete(3)	9,discrete(3)	10,discrete(3)	11,discrete(3)	12,discrete(3)	13,discrete(3)	14,discrete(3)	15,discrete(3)	16,discrete(3)	17,discrete(3)	18,discrete(3)	19,discrete(3)
 2	0	0	2	0	0	2	1	2	2	0	0	2	0	0	2	1	2	0	0
 2	1	2	0	2	0	2	1	0	2	1	2	0	2	0	2	1	0	0	0
 0	2	1	0	0	1	0	1	0	0	2	1	0	0	1	0	1	0	0	0

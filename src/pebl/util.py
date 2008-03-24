@@ -94,11 +94,17 @@ def logadd(x, y):
 
 def logsum(seq):
     """Sums a list of log values, ensuring accuracy."""
-    return reduce(logadd, seq)                                                                         
+    
+    if not isinstance(lst, N.ndarray):
+        lst = N.array(lst)
+    
+    maxval = lst.max()
+    lst = lst - maxval
+    return reduce(logadd, lst) + maxval
 
 ## from webpy (webpy.org)
 def autoassign(self, locals):
-    """
+"""
     Automatically assigns local variables to `self`.
     Generally used in `__init__` methods, as in:
 

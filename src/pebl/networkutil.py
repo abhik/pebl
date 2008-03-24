@@ -30,9 +30,9 @@ class DFSCycleChecker(CycleChecker):
         # got here without returning false, so no cycles below rootnodes
         return True
 
-    def __call__(self):
-        node_indices = set(range(len(self.network.nodes)))
-        return self._isacyclic(node_indices, set())
+    def __call__(self, roots=None):
+        roots = roots if roots else set(range(len(self.network.nodes)))
+        return self._isacyclic(roots, set())
 
 
 class EigenValueCycleChecker(CycleChecker):
@@ -44,7 +44,7 @@ class EigenValueCycleChecker(CycleChecker):
         
     """
 
-    def __call__(self):
+    def __call__(self, rootnodes=None):
         edges = self.network.edges
 
         # first check for self-loops (1 along diagonal)
@@ -94,7 +94,12 @@ class NaiveNetworkRandomizer(NetworkRandomizer):
             adjmat = N.invert(N.identity(n_nodes).astype(bool))*adjmat
             
             # set the adjaceny matrix and check for acyclicity
+            # sparse-change
             self.network.edges.adjacency_matrix = adjmat.astype(bool)
+            #self.network.edges.clear()
+            #for src, dest in zip(*N.nonzero(adjmat)):
+                #self.network.edges.add((src,dest))
+
             if self.network.is_acyclic():
                 return
 

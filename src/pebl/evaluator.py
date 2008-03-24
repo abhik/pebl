@@ -79,7 +79,7 @@ class NetworkEvaluator(object):
         self.datavars = range(self.data.variables.size)
         self.score = None
         self._localscore = localscore_cache or LocalscoreCache(self)
-
+        self.localscore_cache = self._localscore
 
     #
     # Private Interface
@@ -174,6 +174,10 @@ class SmartNetworkEvaluator(NetworkEvaluator):
         
         self.dirtynodes = set()
         self.score = self._globalscore(self.localscores)
+
+        #testscore = NetworkEvaluator(self.data, self.network, self.prior, localscore_cache=self.localscore_cache).score_network()
+        #if testscore != self.score:
+           #print "******************************* smartscore %d != expected %d *********" % (self.score, testscore)
         return self.score
     
     #
@@ -191,6 +195,11 @@ class SmartNetworkEvaluator(NetworkEvaluator):
     def alter_network(self, add=[], remove=[]):
         """Alter the network while retaining the ability to *quickly* undo the changes."""
 
+        # print "#"*10
+        # print "existing: ", self.network.as_string(), self.score
+        # print "+:", add
+        # print "-", remove
+
         # make the required changes
         # MUST remove existing edges before adding new ones. 
         #   if edge e is in `add`, `remove` and `self.network`, 
@@ -199,22 +208,32 @@ class SmartNetworkEvaluator(NetworkEvaluator):
         self.network.edges.add_many(add)    
 
         # check whether changes lead to valid DAG (raise error if they don't)
-        if not self.network.is_acyclic():
+        affected_nodes = set(unzip(add, 1))
+        if affected_nodes and not self.network.is_acyclic(affected_nodes):
             self.network.edges.remove_many(add)
             self.network.edges.add_many(remove)
             raise CyclicNetworkError()
+        
         
         # accept changes: 
         #   1) determine dirtynodes
         #   2) backup state
         #   3) score network (but only rescore dirtynodes)
+        # print ">> acyclic"
+        #print "old dirtynodes: ", self.dirtynodes
         self.dirtynodes.update(set(unzip(add+remove, 1)))
+        #print "new dirtynodes: ", self.dirtynodes
 
         self._backup_state(add, remove)
         self.score = self._score_network_core()
+        # print "new: ", self.network.as_string(), self.score
+
+        # print "#" * 10
+        # print 
         return self.score
        
     def randomize_network(self):
+        # print "%%%%%%%%%%%%%%%%%%%% randomizing network %%%%%%%%%%%%%%%%%%%%"
         newnet = network.Network(self.network.nodes)
         newnet.randomize()
         return self.score_network(newnet)

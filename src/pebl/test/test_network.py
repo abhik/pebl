@@ -33,7 +33,10 @@ class TestSparseEdgeList:
 
     def test_edgeiter(self):
         assert set(self.edges) == set(self.tuplelist), "Can use edgelist as an iterable object."
-    
+
+    def test_len(self):
+        assert len(self.edges) == len(self.tuplelist), "Can determine number of edges"
+
     def test_addedges1(self):
         self.edges.add((0, 3))
         assert (0,3) in self.edges, "Can add edges to edgelist."

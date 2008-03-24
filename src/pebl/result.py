@@ -13,13 +13,16 @@ from pebl import posterior, config
 from pebl.util import flatten
 from pebl.network import Network
 
-class ScoredNetwork(Network):
+
+class _ScoredNetwork(Network):
     """A class  for representing scored networks.
     
-    Supports comparision of networks based on score (good for sorting).
-    Also supports equality checking based on first checking score equality
-    (MUCH faster than checking network edges).  
-    
+    Supports comparision of networks based on score and equality based on first
+    checking score equality (MUCH faster than checking network edges), then edges.  
+ 
+    Note: This is a private class used by LearnerResult. It's interface is
+    not guaranteed to ramain stable.
+
     """
 
     def __init__(self, edgelist, score):
@@ -35,6 +38,7 @@ class ScoredNetwork(Network):
 
     def __hash__(self):
         return hash(self.edges.adjacency_matrix.tostring())
+
 
 class LearnerResult:
     """Class for storing any and all output of a learner.
@@ -67,6 +71,7 @@ class LearnerResult:
         default=1000
     )
 
+
     def __init__(self, learner_=None, size=None):
         self.data = learner_.data if learner_ else None
         self.nodes = self.data.variables if self.data else None
@@ -86,7 +91,7 @@ class LearnerResult:
         """Add a network and score to the results."""
         nets = self.networks
         nethashes = self.nethashes
-        scorednet = ScoredNetwork(net.edges, score)
+        scorednet = _ScoredNetwork(net.edges, score)
 
         if self.size == 0 or len(nets) < self.size:
             if scorednet not in nethashes:

@@ -57,7 +57,7 @@ Test out the smart network evaluator
 (0, 4)
 >>> ne3.alter_network(add=[(1,2)])
 -15.237943965700039
->>> ne3._localscore.hits, ne3._localscore.misses # no hits for nodes 0,1,3, one miss for node 2
+>>> ne3._localscore.hits, ne3._localscore.misses 
 (0, 5)
 
 **Note:** because nodes 0,1,3 did not change, we don't even hit the cache for them.

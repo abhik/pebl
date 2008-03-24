@@ -8,7 +8,7 @@ Testing pebl.result
 >>> from pebl import data, network
 >>> from pebl.test import testfile
 
-Test _ScoredNetwork
+Test ScoredNetwork
 --------------------
 
 >>> from pebl.result import _ScoredNetwork

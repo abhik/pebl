@@ -99,7 +99,8 @@ class GreedyLearner(Learner):
         self.stats.best_score = self.evaluator.score_network()
 
         # continue learning until the stopping criteria is met
-        while not restarting_criteria(self.stats):
+        while not (restarting_criteria(self.stats) or 
+                   self.stopping_criteria(self.stats)):
             self.stats.iterations += 1
 
             try:
