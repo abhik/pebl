@@ -102,9 +102,10 @@ def logsum(seq):
     lst = lst - maxval
     return reduce(logadd, lst) + maxval
 
+
 ## from webpy (webpy.org)
 def autoassign(self, locals):
-"""
+    """
     Automatically assigns local variables to `self`.
     Generally used in `__init__` methods, as in:
 

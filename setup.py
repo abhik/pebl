@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='Pebl',
-    version='0.9.0',
+    version='0.9.1',
     description='Python Environment for Bayesian Learning',
     package_dir={'': 'src'},
     packages=find_packages('src'),
