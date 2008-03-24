@@ -92,7 +92,7 @@ def logadd(x, y):
     else:
         return logProb
 
-def logsum(seq):
+def logsum(lst):
     """Sums a list of log values, ensuring accuracy."""
     
     if not isinstance(lst, N.ndarray):
