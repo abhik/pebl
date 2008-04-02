@@ -1,0 +1,112 @@
+<html>
+    <head>
+        <title>Pebl Results</title>
+        <script language="javascript" src="lib/jquery.js"></script>
+        <script language="javascript" src="lib/ui.base.js"></script>
+        <script language="javascript" src="lib/ui.tabs.js"></script>
+        <script language="javascript" src="lib/result.js"></script>
+        <script language="javascript" src="data/result.data.js"></script>
+        <link rel="stylesheet" href="lib/result.css" type="text/css"/>
+        <link rel="stylesheet" href="lib/ui.tabs.css" type="text/css"/>
+        <script language="javascript">
+            $().ready(function() {
+                // create the bargraph
+                bargraph($("#bargraph"), resultdata.topnets_normscores, resultdata.topnets_scores); 
+                
+                // create the layout toggle
+                $("#layout-toggle").bind('change', function() {
+                   if ($("#layout-toggle").attr('checked') == true) {
+                       uselayout("-common"); 
+                   } else {
+                       uselayout("");
+                   }
+                });
+
+                // create the runs table
+                var runs = $("#runs");
+                for (var i=0; i < resultdata.runs.length; i++) {
+                    runs.append("<tr><td>" + i + 
+                            "</td><td>" + resultdata.runs[i].host + 
+                            "</td><td>" + resultdata.runs[i].runtime + 
+                            "</td></tr>");
+                }
+
+                // create the consensus networks selector
+                $("#consensus-threshold").bind('change', function() {
+                    $("#consensus-network-viewer").attr('src', "data/consensus." + $("#consensus-threshold").val() + ".png"); 
+                });
+
+
+                // finally, create tabs
+                $("#tabs").tabs();
+
+            });
+        </script>
+    </head>
+    <body>
+        <img src="lib/pebl-logo.png">
+        <div>
+            <ul id="tabs">
+                <li><a href="#stats"><span>Statistics</span><a></li>
+                <li><a href="#top-networks"><span>Top Scoring Networks</span><a></li>
+                <li><a href="#consensus-networks"><span>Consensus Networks</span><a></li>
+            </ul>
+        </div>
+        
+        
+
+
+        <div id="stats">
+            <table border="0">
+                <tr>
+                    <td valign=top>
+                        <img src="data/scores.png">
+                    </td>
+                    <td valign=top><br>
+                        Run Statistics
+                        <table id="runs" style="font-size: smaller">
+                            <tr class="header"><td>Run</td><td>Host</td><td>Runtime (in mins)</td></tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+
+
+        <div id="top-networks">
+            <div class="control-panel">
+            <table border="0"><tr>
+                <td>
+                    <div id="bargraph"></div>
+                </td>
+                <td valign="bottom" style="padding-left: 40px">
+                    Rank: <span id="network-rank">&nbsp;</span><br/>
+                    Score: <span id="network-score">&nbsp;</span>
+                </td>
+            </tr></table>
+            <input type="checkbox" name="layout-toggle" id="layout-toggle">Use common layout for all networks</input>
+            </div>
+            <img id="network-viewer"/>
+        </div>
+
+        
+        <div id="consensus-networks">
+            <div class="control-panel">
+                Threshold for Consensus Network: <select id="consensus-threshold">
+                    <option value=1 SELECTED=1>10%</option>
+                    <option value=2>20%</option>
+                    <option value=3>30%</option>
+                    <option value=4>40%</option>
+                    <option value=5>50%</option>
+                    <option value=6>60%</option>
+                    <option value=7>70%</option>
+                    <option value=8>80%</option>
+                    <option value=9>90%</option>
+                </select>
+            </div>
+            <img id="consensus-network-viewer" src="data/consensus.1.png">
+        </div>
+
+    </body>
+</html>

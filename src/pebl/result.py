@@ -12,7 +12,7 @@ import os.path
 from pebl import posterior, config
 from pebl.util import flatten
 from pebl.network import Network
-
+from pebl.visualization import result_html
 
 class _ScoredNetwork(Network):
     """A class  for representing scored networks.
@@ -39,6 +39,12 @@ class _ScoredNetwork(Network):
     def __hash__(self):
         return hash(self.edges.adjacency_matrix.tostring())
 
+
+class LearnerRunStats:
+    def __init__(self, start):
+        self.start = start
+        self.end = None
+        self.host = socket.gethostname()
 
 class LearnerResult:
     """Class for storing any and all output of a learner.
@@ -78,14 +84,15 @@ class LearnerResult:
         self.size = size or config.get('result.numnetworks')
         self.networks = []
         self.nethashes = {}
+        self.runs = []
 
     def start_run(self):
         """Indicates that the learner is starting a new run."""
-        pass
+        self.runs.append(LearnerRunStats(time.time()))
 
     def stop_run(self):
         """Indicates that the learner is stopping a run."""
-        pass 
+        self.runs[-1].end = time.time()
 
     def add_network(self, net, score):
         """Add a network and score to the results."""
@@ -109,6 +116,9 @@ class LearnerResult:
         filename = filename or config.get('result.filename')
         with open(filename, 'w') as fp:
             cPickle.dump(self, fp)
+    
+    def tohtml(self, outdir):
+        result_html(self, outdir)
 
     @property
     def posterior(self):
@@ -127,27 +137,28 @@ def merge(*args):
         merge(*results)
     
     """
-    
+   
     results = flatten(args)
     if len(results) is 1:
         return results[0]
-
-    # merge all networks, remove duplicates, then sort
-    # TODO: can't do set(allnets) to remove dups cuz ScoredNet doesn't define a __hash__.. fix that.
-    allnets = []
-    for net in flatten(r.networks for r in results):
-        if net not in allnets:
-            allnets.append(net)
-    allnets.sort()
-
 
     # create new result object
     newresults = LearnerResult()
     newresults.data = results[0].data
     newresults.nodes = results[0].nodes
-    newresults.networks = allnets
 
-    # TODO: when we add stats to LearnerResults, merge the stats here
+    # merge all networks, remove duplicates, then sort
+    allnets = list(set([net for net in flatten(r.networks for r in results)]))
+    allnets.sort()
+    newresults.networks = allnets
+    newresults.nethashes = dict([(net, 1) for net in allnets])
+
+    # merge run statistics
+    if hasattr(results[0], 'runs'):
+        newresults.runs = flatten([r.runs for r in results]) 
+    else:
+        newresults.runs = []
+
     return newresults
 
 def fromfile(filename):

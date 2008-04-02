@@ -30,5 +30,9 @@ setup(
         'console_scripts': [
             'pebl = pebl:main'
         ]
-    }
+    },
+
+    # py2app
+    setup_requires=['py2app'],
+    app=["src/pebl/__init__.py"],
 )

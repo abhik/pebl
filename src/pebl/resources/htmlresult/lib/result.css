@@ -1,0 +1,38 @@
+div.control-panel {
+    padding: 3px;
+    background: #eee;
+    border: 1px solid #e0e0e0;
+    margin-bottom: 10px;
+
+}
+
+.bargraph-bar {
+    background: #036;
+    margin-right: 1px;
+}
+.bargraph-bar.hover {
+    background: #369;
+}
+.bargraph-bar.selected {
+    background: #f90;
+}
+
+
+table#runs {
+    border-collapse: collapse;
+}
+table#runs td {
+    border-bottom: 1px solid #ccc;
+    border-top: 1px solid #ccc;
+    padding: 4px;
+}
+table#runs td+td {
+    border-left: 1px solid #666;
+}
+table#runs tr.header td {
+    border-bottom: 2px solid #666;
+    border-top: 2px solid #666;
+    background: #eee;
+    padding: 4px;
+
+}

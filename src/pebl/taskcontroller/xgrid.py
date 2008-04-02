@@ -26,7 +26,6 @@ class XgridDeferredResult(DeferredResult):
             outdir = tmpdir
         )
         self.job.delete()
-        print tmpdir
         rst = result.fromfile(os.path.join(tmpdir,'result.pebl'))
         shutil.rmtree(tmpdir)  
 
@@ -98,11 +97,13 @@ class XgridController(_BaseController):
     def submit(self, tasks):
         grid = self._grid
 
+        drs = []
         for task in tasks:
             task._prepare_config(workingdir_is_tmp=False)
             task.job = grid.submit(self.peblpath, 'config.txt', indir=task.cwd)
-       
-        return [XgridDeferredResult(grid, t) for t in tasks]
+            print "jobid:", task.job.jobID
+            drs.append(XgridDeferredResult(grid, task))
+        return drs
    
     def retrieve(self, deferred_results):
         drs = deferred_results

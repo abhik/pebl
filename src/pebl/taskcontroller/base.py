@@ -44,7 +44,7 @@ class Task(object):
         pass
 
     def split(self, count):
-        return [self] + [copy.deepcopy(self) for i in xrange(count)-1]
+        return [self] + [copy.deepcopy(self) for i in xrange(count-1)]
 
 class DeferredResult(object):
     def __init__(self, **kw):

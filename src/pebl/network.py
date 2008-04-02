@@ -402,8 +402,7 @@ class Network(object):
         return Network(self.nodes, self.edges.adjacency_matrix.copy())    
        
 
-    def layout(self, width=400, height=400, 
-               dotpath="/Applications/Graphviz.app/Contents/MacOS/dot"): 
+    def layout(self, width=400, height=400, dotpath="dot"): 
         """Determines network layout using Graphviz's dot algorithm.
 
         width and height are in pixels.
@@ -413,18 +412,18 @@ class Network(object):
 
         """
 
-        # does the dot program exist?
-        if not os.path.exists(dotpath):
-            raise Exception("Cannot find the dot program at %s." % dotpath)
 
         tempdir = tempfile.mkdtemp(prefix="pebl")
         dot1 = os.path.join(tempdir, "1.dot")
         dot2 = os.path.join(tempdir, "2.dot")
         self.as_dotfile(dot1)
 
-        os.system("%s -Tdot -Gratio=fill -Gdpi=60 -Gfill=10,10 %s > %s" % (dotpath, dot1, dot2))
+        try:
+            os.system("%s -Tdot -Gratio=fill -Gdpi=60 -Gfill=10,10 %s > %s" % (dotpath, dot1, dot2))
+        except:
+            raise Exception("Cannot find the dot program at %s." % dotpath)
+
         dotgraph = pydot.graph_from_dot_file(dot2)
-      
         nodes = (n for n in dotgraph.get_node_list() if n.get_pos())
         self.node_positions = [[int(i) for i in n.get_pos().split(',')] for n in nodes] 
 
@@ -443,11 +442,21 @@ class Network(object):
     def as_dotstring(self):
         """Returns network as a dot-formatted string"""
 
+        def node(n, position):
+            s = "\t\"%s\"" % n.name
+            if position:
+                x,y = position
+                s += " [pos=\"%d,%d\"]" % (x,y)
+            return s + ";"
+
+
         nodes = self.nodes
+        positions = self.node_positions if hasattr(self, 'node_positions') \
+                                        else [None for n in nodes]
 
         return "\n".join(
             ["digraph G {"] + 
-            ["\t\"%s\";" % n.name for n in nodes] + 
+            [node(n, pos) for n,pos in zip(nodes, positions)] + 
             ["\t\"%s\" -> \"%s\";" % (nodes[src].name, nodes[dest].name) 
                 for src,dest in self.edges] +
             ["}"]
@@ -468,18 +477,20 @@ class Network(object):
         return pydot.graph_from_dot_data(self.as_dotstring())
 
 
-    def as_image(self, filename, decorator=lambda x: x):
+    def as_image(self, filename, decorator=lambda x: x, prog='dot'):
         """Creates an image (PNG format) for the newtork.
 
         decorator is a function that accepts a pydot graph, modifies it and
         returns it.  decorators can be used to set visual appearance of
         networks (color, style, etc).
 
+        prog is the Graphviz program to use (default: dot).
+
         """
         
         g = self.as_pydot()
         g = decorator(g)
-        g.write_png(filename, prog="dot")
+        g.write_png(filename, prog=prog)
 
 
 #        

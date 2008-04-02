@@ -127,7 +127,7 @@ class Learner(Task):
         params['data.text'] = self.data.tostring()
 
 
-        if is_customlearner(config.get('learner.type')):
+        if ':' in config.get('learner.type'):
             # serializing a custom learner
             params['learner.type'] =  config.get('learner.type')
         else:

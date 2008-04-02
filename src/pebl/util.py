@@ -64,12 +64,12 @@ def rescale_logvalues(lst):
     
     return lst - lst.max()
 
-def rescaleAndExponentiateLogValues(lst):
-    lst = N.array(lst)
-    lst = lst - lst.max()
-    lst = N.exp(lst)
+#def rescaleAndExponentiateLogValues(lst):
+    #lst = N.array(lst)
+    #lst = lst - lst.max()
+    #lst = N.exp(lst)
 
-    return lst
+    #return lst
 
 
 _LogZero = 1.0e-100
