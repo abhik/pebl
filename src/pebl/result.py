@@ -12,7 +12,11 @@ import os.path
 from pebl import posterior, config
 from pebl.util import flatten
 from pebl.network import Network
-from pebl.visualization import result_html
+
+try:
+    from pebl.visualization import result_html
+except:
+    pass
 
 class _ScoredNetwork(Network):
     """A class  for representing scored networks.
