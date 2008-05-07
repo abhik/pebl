@@ -1,3 +1,5 @@
+"""Module providing a taskcontroller than runs tasks over multiple processes."""
+
 import os, os.path
 import cPickle
 import thread, time
@@ -19,6 +21,14 @@ class MultiProcessController(_BaseController):
     )
         
     def __init__(self, poolsize=None):
+        """Creates a task controller that runs taks on multiple processes.
+
+        This task controller uses a pool of processes rather than spawning all
+        processes concurrently. poolsize is the size of this pool and by
+        default it is big enough to run all processes concurrently.
+
+        """
+
         self.poolsize = poolsize or config.get('multiprocess.poolsize')
 
     def run(self, tasks):

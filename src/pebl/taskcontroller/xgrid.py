@@ -69,7 +69,7 @@ class XgridController(_BaseController):
 
     _ppeblpath = config.StringParameter(
         'xgrid.peblpath',
-        'Full path to the pebl script on Xgrid agents',
+        'Full path to the pebl script on Xgrid agents.',
         default='pebl'
     )
 

@@ -1,3 +1,5 @@
+"""Classes and functions for running tasks on Amazon's EC2"""
+
 import time
 import os.path
 import shutil 
