@@ -20,7 +20,8 @@ def as_list(c):
         return []
     else:
         return [c]
- 
+
+
 def cond(condition, expr1, expr2):
     """Marked for deletion.. Python2.5 provides this."""
     
@@ -64,14 +65,6 @@ def rescale_logvalues(lst):
     
     return lst - lst.max()
 
-#def rescaleAndExponentiateLogValues(lst):
-    #lst = N.array(lst)
-    #lst = lst - lst.max()
-    #lst = N.exp(lst)
-
-    #return lst
-
-
 _LogZero = 1.0e-100
 _MinLogExp = math.log(_LogZero);
 def logadd(x, y):
@@ -107,9 +100,11 @@ def logsum(lst):
 def autoassign(self, locals):
     """
     Automatically assigns local variables to `self`.
-    Generally used in `__init__` methods, as in:
+    Generally used in `__init__` methods, as in::
 
-        def __init__(self, foo, bar, baz=1): autoassign(self, locals())
+        def __init__(self, foo, bar, baz=1): 
+            autoassign(self, locals())
+
     """
     for (key, value) in locals.iteritems():
         if key == 'self': 
@@ -120,7 +115,7 @@ def autoassign(self, locals):
 def unzip(l, *jj):
     """Opposite of zip().
 
-    *jj is a tuple of list indexes (or keys) to extract or unzip. If not
+    jj is a tuple of list indexes (or keys) to extract or unzip. If not
     specified, all items are unzipped.
 
     """
@@ -260,4 +255,18 @@ def levenshtein(a,b):
             current[j] = min(add, delete, change)
             
     return current[n]
+
+
+def extended_property(func):
+  """Function decorator for defining property attributes
+
+  The decorated function is expected to return a dictionary
+  containing one or more of the following pairs:
+
+      * fget - function for getting attribute value
+      * fset - function for setting attribute value
+      * fdel - function for deleting attribute
+
+  """
+  return property(doc=func.__doc__, **func())
 
