@@ -9,7 +9,6 @@ typedef struct {
     //   Nijk = counts[j][k+1]
     //   so, Nij in the first column, Nijk in the rest
     int **counts;
-    
     int *offsets;
     int num_parents, qi, ri, max_qi;
 } CPT;
@@ -191,7 +190,6 @@ dealloc_cpt(PyObject *self, PyObject *args) {
     }
 
     CPT *cpt = (CPT*) pycpt;
-    Py_DECREF(pycpt);
     _dealloc_cpt(cpt);
 
     Py_RETURN_NONE;
