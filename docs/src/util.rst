@@ -1,0 +1,2 @@
+.. automodule:: pebl.util
+    :members:
