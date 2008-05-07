@@ -3,14 +3,11 @@ import numpy as N
 from pebl import network, data, config
 
 #
-# Testing edgelists (working with edges)
+# Testing edgesets (working with edges)
 #
-class TestSparseEdgeList:
-    # Which class of edgelist to use
-    edgelist_class = network.SparseEdgeList
-
+class TestEdgeSet:
     def setUp(self):
-        self.edges = self.edgelist_class(num_nodes=6)
+        self.edges = network.EdgeSet(num_nodes=6)
         self.tuplelist = [(0,2), (0,5), (1,2)]
         for edge in self.tuplelist:
             self.edges.add(edge)
@@ -42,20 +39,20 @@ class TestSparseEdgeList:
         assert (0,3) in self.edges, "Can add edges to edgelist."
 
     def test_incoming(self):
-        assert self.edges.incoming(0) == [], "Testing edgelist.incoming"
-        assert set(self.edges.incoming(2)) == set([0,1]), "Testing edgelist.incoming"
+        assert self.edges.incoming(0) == set([]), "Testing edgelist.incoming"
+        assert self.edges.incoming(2) == set([0,1]), "Testing edgelist.incoming"
     
     def test_outgoing(self):
-        assert self.edges.outgoing(2) == [], "Testing edgelist.outgoing"
-        assert set(self.edges.outgoing(0)) == set([2,5]), "Testing edgelist.outgoing"
+        assert self.edges.outgoing(2) == set([]), "Testing edgelist.outgoing"
+        assert self.edges.outgoing(0) == set([2,5]), "Testing edgelist.outgoing"
     
     def test_parents(self):
-        assert self.edges.parents(0) == [], "Testing edgelist.parents"
-        assert set(self.edges.parents(2)) == set([0,1]), "Testing edgelist.parents"
+        assert self.edges.parents(0) == set([]), "Testing edgelist.parents"
+        assert self.edges.parents(2) == set([0,1]), "Testing edgelist.parents"
     
     def test_children(self):
-        assert self.edges.children(2) == [], "Testing edgelist.children"
-        assert set(self.edges.children(0)) == set([2,5]), "Testing edgelist.children"
+        assert self.edges.children(2) == set([]), "Testing edgelist.children"
+        assert self.edges.children(0) == set([2,5]), "Testing edgelist.children"
 
     def test_contains1(self):
         assert (0,2) in self.edges, "Can check if edge in edgelist."
@@ -84,26 +81,15 @@ class TestSparseEdgeList:
         assert (self.edges.adjacency_matrix == N.array(expected, dtype=bool)).all(), "Testing boolean matrix representation."
 
 
-class TestMatrixEdgeList(TestSparseEdgeList):
-    # Which class of edgelist to use
-    edgelist_class = network.MatrixEdgeList
-
-
 #
-# Testing cyclecheckers
+# Testing is_acyclic
 #
-class TestDFSCyclechecker:
-    cyclechecker = 'dfs'
-
+class TestIsAcyclic:
     def setUp(self):
-        config.set('network.cyclechecker', self.cyclechecker)
         self.net = network.Network([data.DiscreteVariable(i,3) for i in xrange(6)])
         for edge in [(0,1), (0,3), (1,2)]:
             self.net.edges.add(edge)
     
-    def test_correct_implementation(self):
-        assert self.net.is_acyclic.__class__ == self.net.cyclecheckers[self.cyclechecker]
-
     def test_loopchecking(self):
         assert self.net.is_acyclic(), "Should be acyclic"
 
@@ -111,25 +97,6 @@ class TestDFSCyclechecker:
         self.net.edges.add((2,0))
         assert not self.net.is_acyclic(), "Should not be acyclic"
     
-class TestEigenvalueCyclechecker(TestDFSCyclechecker):
-    cyclechecker = 'eigenvalue'
-
-#
-# Testing randomizers
-#
-class TestNaiveRandomizer:
-    randomizer = 'naive'
-
-    def setUp(self):
-        config.set('network.randomizer', self.randomizer)
-        self.net = network.Network([data.DiscreteVariable(i,3) for i in xrange(6)])
-
-    def test_correct_implementation(self):
-        assert self.net.randomize.__class__ == self.net.randomizers[self.randomizer]
-
-    def test_randomize(self):
-        self.net.randomize()
-        assert self.net.is_acyclic(), "Random network should be acyclic"
 
 
 #
@@ -198,17 +165,6 @@ class TestNetworkFromListOfEdges:
                (4,5) in self.net.edges and \
                (2,3) in self.net.edges
 
-class TestNetworkFromMatrixEdgeList(TestNetworkFromListOfEdges):
-    def setUp(self):
-        edges = [(0,1), (4,5), (2,3)]
-        medgelist = network.MatrixEdgeList(num_nodes=6)
-        medgelist.add_many(edges)
-
-        self.net = network.Network(
-            [data.DiscreteVariable(str(i), 3) for i in xrange(6)],
-            medgelist
-        )
-
 class TestNetworkFromString(TestNetworkFromListOfEdges):
     def setUp(self):
         self.net = network.Network(
@@ -216,4 +172,33 @@ class TestNetworkFromString(TestNetworkFromListOfEdges):
             "0,1;4,5;2,3"
         )
 
+class TestRandomNetwork:
+    def setUp(self):
+        self.nodes = [data.DiscreteVariable(str(i),3) for i in xrange(6)]
+
+    def test_acyclic(self):
+        net = network.random_network(self.nodes)
+        assert net.is_acyclic() == True, "Random network is acyclic."
+
+    def test_required_edges(self):
+        net = network.random_network(self.nodes, required_edges=[(0,1), (3,0)])
+        assert net.is_acyclic() == True and \
+               (0,1) in net.edges and \
+               (3,0) in net.edges
+
+    def test_prohibited_edges(self):
+        net = network.random_network(self.nodes, prohibited_edges=[(0,1), (3,0)])
+        assert net.is_acyclic() == True and \
+               (0,1) not in net.edges and \
+               (3,0) not in net.edges
+
+    def test_required_and_prohibited_edges(self):
+        net = network.random_network(self.nodes, required_edges=[(0,1), (3,0)],
+                                     prohibited_edges=[(2,3), (1,4)])
+
+        assert net.is_acyclic() == True and \
+               (0,1) in net.edges and \
+               (3,0) in net.edges and \
+               (2,3) not in net.edges and \
+               (1,4) not in net.edges
 

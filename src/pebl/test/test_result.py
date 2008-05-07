@@ -3,7 +3,7 @@
 Testing pebl.result
 ===================
 
-
+>>> from copy import deepcopy
 >>> from pebl import result
 >>> from pebl import data, network
 >>> from pebl.test import testfile
@@ -87,6 +87,17 @@ Testing the Posterior
 '0,2;0,4;1,2;2,3;3,4'
 >>> mpost.consensus_network(.8).as_string()
 '1,2;2,3;3,4'
+
+Testing ScoredNet
+------------------
+
+Copying a ScoredNetwork shouldn't affect the hash
+
+>>> n = mres.networks[0]
+>>> for i in xrange(1000):
+...    if hash(n) != hash(deepcopy(n)):
+...       print "OOPS!"
+
 
 """
 
