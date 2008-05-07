@@ -1,12 +1,12 @@
-# download setuptools if needed
 import ez_setup
 ez_setup.use_setuptools()
 
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, Extension
+import numpy
 
 setup(
     name='Pebl',
-    version='0.9.1',
+    version='0.9.5',
     description='Python Environment for Bayesian Learning',
     package_dir={'': 'src'},
     packages=find_packages('src'),
@@ -14,12 +14,18 @@ setup(
     ## Package metadata.. for upload to PyPI
     author='Abhik Shah',
     author_email='abhikshah@gmail.comm',
-    url='http://sysbio.engin.umich.edu/Pebl/',
+    url='http://pebl-project.googlecode.com',
 
     # required dependencies
-    install_requires=['numpy >= 1.0.3', 'nose >= 0.9', 'pydot', 'pyparsing >= 1.4.7'],
+    install_requires=[
+        'numpy >= 1.0.3',       # matrices, linear algebra, etc
+        'nose >= 0.9',          # testing framework
+        'pydot',                # to output network as dot file
+        'pyparsing >= 1.4.7',   # required by pydot but not specified in its setup
+        'sphinx'                # documentation generation
+    ],
     
-    # data files (mostly just the test data for unit tests)
+    # data files, resources, etc
     include_package_data = True,
 
     # tests
@@ -32,4 +38,9 @@ setup(
         ]
     },
 
+    # C extension modules
+    ext_modules = [
+        Extension('pebl._network', sources=['src/pebl/_network.c']),
+        Extension('pebl._cpd', sources=['src/pebl/_cpd.c'], include_dirs=[numpy.get_include()]),
+    ],
 )
