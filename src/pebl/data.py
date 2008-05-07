@@ -28,8 +28,8 @@ _ptext = config.StringParameter(
 
 _pdiscretize = config.IntParameter(
     'data.discretize',
-    """Number of bins used to discretize data. Specify 0 ot -1 to indicate that
-    data should not be discretized.""",
+    'Number of bins used to discretize data. Specify 0 to indicate that '+\
+    'data should not be discretized.',
     default=0
 )
 
@@ -58,6 +58,7 @@ class IncorrectArityError(Exception):
                    (v.name, v.arity, uniquevals)
 
 class ClassVariableError(Exception):
+    """Error with a class variable."""
     msg = """Data for class variables must include only the labels specified in
     the variable annotation."""
 
@@ -106,39 +107,37 @@ class ClassVariable(DiscreteVariable):
 # Main class for dataset
 #
 class Dataset(object):
-    """Class for representing datasets.
-
-    A Dataset consists of the following data structures which are all
-    numpy.ndarray instances:
-
-     - observations: a 2D matrix of observed values. 
-        - dimension 1 is over samples, dimension 2 is over variables.
-        - observations[i,j] is the observed value for jth variable in the ith
-          sample.
-
-    - missing: a 2D binary mask for missing values
-        - missing[i,j] = 1 IFF observation[i,j] is missing
-    
-    - interventions: a 2D binary mask for interventions
-        - interventions[i,j] = 1 IFF the jth variable was intervened upon in
-          the ith sample.
-    
-    - variables,samples: 1D array of variable or sample annotations
-    
-    This class provides a few public methods to manipulate datasets; one can
-    also use numpy functions/methods directly.
-
-    """
-
     def __init__(self, observations, missing=None, interventions=None, 
-                 variables=None, samples=None):
-        """Create a Dataset instance.
+                 variables=None, samples=None, skip_stats=False):
+        """Create a pebl Dataset instance.
 
-         - The only required argument is observations (a 2D numpy array).
-         - If missing or interventions are not specified, they are assumed to
-           be all zeros (no missing values and no interventions).
-         - If variables or samples are not specified, appropriate Variable or
-           Sample annotations are created with only the name attribute.
+        A Dataset consists of the following data structures which are all
+        numpy.ndarray instances:
+
+        * observations: a 2D matrix of observed values. 
+            - dimension 1 is over samples, dimension 2 is over variables.
+            - observations[i,j] is the observed value for jth variable in the ith
+              sample.
+
+        * missing: a 2D binary mask for missing values
+            - missing[i,j] = 1 IFF observation[i,j] is missing
+        
+        * interventions: a 2D binary mask for interventions
+            - interventions[i,j] = 1 IFF the jth variable was intervened upon in
+              the ith sample.
+        
+        * variables,samples: 1D array of variable or sample annotations
+        
+        This class provides a few public methods to manipulate datasets; one can
+        also use numpy functions/methods directly.
+
+        Required/Default values:
+
+             * The only required argument is observations (a 2D numpy array).
+             * If missing or interventions are not specified, they are assumed to
+               be all zeros (no missing values and no interventions).
+             * If variables or samples are not specified, appropriate Variable or
+               Sample annotations are created with only the name attribute.
 
         """
 
@@ -159,13 +158,12 @@ class Dataset(object):
             self.interventions = N.zeros(obs.shape, dtype=bool)
         if variables is None:
             self.variables = N.array([Variable(str(i)) for i in xrange(obs.shape[1])])
+            self._guess_arities()
         if samples is None:
             self.samples = N.array([Sample(str(i)) for i in xrange(obs.shape[0])])
 
-
-        # do sanity checks on data
-        self._check_arities()
-        
+        if not skip_stats:
+            self._calc_stats()
 
     # 
     # public methods
@@ -195,8 +193,23 @@ class Dataset(object):
             self.missing[N.ix_(samples,variables)],
             self.interventions[N.ix_(samples,variables)],
             self.variables[variables],
-            self.samples[samples]
+            self.samples[samples],
+            skip_stats = True
         )
+
+    def _subset_ni_fast(self, variables):
+        ds = _FastDataset.__new__(_FastDataset)
+
+        if not self.has_interventions:
+            ds.observations = self.observations[:,variables]
+            ds.samples = self.samples
+        else:
+            samples = N.where(self.interventions[:,variables[0]] == False)[0] 
+            ds.observations = self.observations[samples][:,variables]
+            ds.samples = self.samples[samples]
+
+        ds.variables = self.variables[variables]
+        return ds
 
 
     # TODO: test
@@ -239,15 +252,21 @@ class Dataset(object):
         ) 
 
 
-    def tofile(self, filename):
+    def tofile(self, filename, *args, **kwargs):
         """Write the data and metadata to file in a tab-delimited format."""
         
         with file(filename, 'w') as f:
-            f.write(self.tostring())
+            f.write(self.tostring(*args, **kwargs))
 
 
-    def tostring(self, linesep='\n'):
-        """Return the data and metadata as a string in a tab-delimited format."""
+    def tostring(self, linesep='\n', variable_header=True, sample_header=True):
+        """Return the data and metadata as a string in a tab-delimited format.
+        
+        If variable_header is True, include variable names and type.
+        If sample_header is True, include sample names.
+        Both are True by default.
+
+        """
 
         def dataitem(row, col):
             val = "X" if self.missing[row,col] else str(self.observations[row,col])
@@ -273,14 +292,15 @@ class Dataset(object):
         lines = []
 
         # add variable annotations
-        lines.append("\t".join([variable(v) for v in self.variables]))
+        if sample_header:
+            lines.append("\t".join([variable(v) for v in self.variables]))
         
         # format data
         nrows,ncols = self.shape
         d = [[dataitem(r,c) for c in xrange(ncols)] for r in xrange(nrows)]
         
         # add sample names if we have them
-        if hasattr(self.samples[0], 'name'):
+        if sample_header and hasattr(self.samples[0], 'name'):
             d = [[s.name] + row for row,s in zip(d,self.samples)]
 
         # add data to lines
@@ -301,14 +321,19 @@ class Dataset(object):
     #
     # private methods/properties
     #
+    def _calc_stats(self):
+        self.has_interventions = self.interventions.any()
+        self.has_missing = self.missing.any()
+    
     def _guess_arities(self):
         """Guesses variable arity by counting the number of unique observations."""
 
         for col,var in enumerate(self.variables):
             var.arity = N.unique(self.observations[:,col]).size
+            var.__class__ = DiscreteVariable
 
 
-    def _check_arities(self):
+    def check_arities(self):
         """Checks whether the specified airty >= number of unique observations.
 
         The check is only performed for discrete variables.
@@ -329,6 +354,17 @@ class Dataset(object):
             raise IncorrectArityError(errors)
 
 
+class _FastDataset(Dataset):
+    """A version of the Dataset class created by the _subset_ni_fast method.
+
+    The Dataset._subset_ni_fast method creates a quick and dirty subset that
+    skips many steps. It's a private method used by the evaluator module. Do
+    not use this unless you know what you're doing.  
+    
+    """
+    pass
+
+
 #
 # Factory Functions
 #
@@ -336,7 +372,6 @@ def fromfile(filename):
     """Parse file and return a Dataset instance.
 
     The data file is expected to conform to the following format
-    ------------------------------------------------------------
 
         - comment lines begin with '#' and are ignored.
         - The first non-comment line *must* specify variable annotations
@@ -488,21 +523,30 @@ def fromstring(stringrep, fieldsep='\t'):
     obs, missing, interventions = d.transpose(2,0,1)
 
     # pack observations into bytes if possible (they're integers and < 255)
-    dtype = 'byte' if (obs.dtype.kind is 'i' and obs.max() < 255) else obs.dtype
+    dtype = 'int' if obs.dtype.kind is 'i' else obs.dtype
     
     # x.astype() returns a casted *copy* of x
     # returning copies of observations, missing and interventions ensures that
     # they're contiguous in memory (should speedup future calculations)
-    return Dataset(
+    d = Dataset(
         obs.astype(dtype),
         missing.astype(bool),
         interventions.astype(bool), 
         variables, 
         samples,
     )
+    d.check_arities()
+    return d
 
-# TODO: test
+
 def fromconfig():
+    """Create a Dataset from the configuration information.
+
+    Loads data and discretizes (if requested) based on configuration
+    parameters.
+    
+    """
+
     fname = config.get('data.filename')
     text = config.get('data.text')
     if text:
@@ -519,15 +563,21 @@ def fromconfig():
     return data_
 
 
-def combine(datasets, axis=None):
-    """axis should be 'samples', or 'variables' """
+def merge(datasets, axis=None):
+    """Merges multiple datasets.
+
+    datasets should be a list of Dataset objects.
+    axis should be either 'variables' or 'samples' and determines how the
+    datasets are merged.  
     
+    """
+
     if axis == 'variables':
-        variables = flatten(d.variables for d in datasets)
+        variables = N.hstack(tuple(d.variables for d in datasets))
         samples = datasets[0].samples
         stacker = N.hstack
     else:
-        samples = flatten(d.samples for d in datasets)
+        samples = N.hstack(tuple(d.samples for d in datasets))
         variables = datasets[0].variables
         stacker = N.vstack
 
