@@ -1,3 +1,5 @@
+"""Classes and functions for Simulated Annealing learner"""
+
 from math import exp
 from pebl import network, result, evaluator, config
 from pebl.learner import Learner
@@ -56,6 +58,12 @@ class SimulatedAnnealingLearner(Learner):
 
     def __init__(self, data_=None, prior_=None, start_temp=None,
                  delta_temp=None, max_iters_at_temp=None, seed=None):
+        """Create a Simulated Aneaaling learner.
+
+        start_temp, delta_temp, max_iters_at_temp and seed can be specified via
+        the constructor or configuration parameters.
+       
+        """
 
         super(SimulatedAnnealingLearner,self).__init__(data_, prior_)
         self.start_temp = start_temp or config.get('simanneal.start_temp')
@@ -69,6 +77,8 @@ class SimulatedAnnealingLearner(Learner):
 
 
     def run(self):
+        """Run the learner."""
+
         self.stats = SALearnerStatistics(self.start_temp, self.delta_temp, 
                                          self.max_iters_at_temp)
         self.result =  result.LearnerResult(self)
@@ -88,7 +98,7 @@ class SimulatedAnnealingLearner(Learner):
             newscore = self.evaluator.score_network()
             self.result.add_network(self.evaluator.network, newscore)
 
-            if self.accept(newscore):
+            if self._accept(newscore):
                 # set current score
                 self.stats.current_score = newscore
                 if self.stats.current_score > self.stats.best_score:
@@ -103,7 +113,7 @@ class SimulatedAnnealingLearner(Learner):
         self.result.stop_run()
         return self.result
 
-    def accept(self, newscore):
+    def _accept(self, newscore):
         oldscore = self.stats.current_score
 
         if newscore >= oldscore:

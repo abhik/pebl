@@ -1,3 +1,5 @@
+"""Classes and functions for doing exhaustive learning."""
+
 from pebl import prior, config, evaluator, result, network
 from pebl.learner import Learner
 from pebl.taskcontroller.base import Task
@@ -14,6 +16,16 @@ class ListLearner(Learner):
     )
 
     def __init__(self, data_=None, prior_=None, iterable=None):
+        """Create a ListLearner learner.
+
+        iterable can be any python iterable (list, set, generator, etc).
+
+        If you run the learner on a parallel platform (or manually call the
+        split() method), the iterable will be first converted to a static list.
+        Otherwise, it will simply iterate without first creating a list. 
+
+        """
+
         super(ListLearner, self).__init__(data_, prior_)
         self.iterable = iterable
         if not self.iterable:
@@ -52,6 +64,14 @@ class ListLearner(Learner):
         return configobj
      
     def split(self, count):
+        """Split the learner into multiple learners.
+
+        Converts the iterable passed in via the constructor into a static list
+        and then splits it into `count` parts. This is similar to MPI's scatter
+        functionality.
+    
+        """
+
         nets = list(self.iterable)
         numnets = len(nets)
         netspertask = numnets/count
