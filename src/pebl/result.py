@@ -5,7 +5,7 @@ from __future__ import with_statement
 import time
 import socket
 from bisect import insort
-from copy import deepcopy
+from copy import deepcopy, copy
 import cPickle
 import os.path
 
@@ -37,11 +37,10 @@ class _ScoredNetwork(Network):
         return cmp(self.score, other.score)
 
     def __eq__(self, other):
-        return self.score == other.score and \
-               (self.edges.adjacency_matrix == other.edges.adjacency_matrix).all()
+        return self.score == other.score and self.edges == other.edges
 
     def __hash__(self):
-        return hash(self.edges.adjacency_matrix.tostring())
+        return hash(self.edges)
 
 
 class LearnerRunStats:
@@ -102,19 +101,20 @@ class LearnerResult:
         """Add a network and score to the results."""
         nets = self.networks
         nethashes = self.nethashes
-        scorednet = _ScoredNetwork(net.edges, score)
+        nethash = hash(net.edges)
 
         if self.size == 0 or len(nets) < self.size:
-            if scorednet not in nethashes:
-                newnet = deepcopy(scorednet)
-                insort(nets, newnet)
-                nethashes[newnet] = 1
-        elif scorednet.score > nets[0].score and scorednet not in nethashes:
-            newnet = deepcopy(scorednet)
-            nethashes.pop(nets[0])
+            if nethash not in nethashes:
+                snet = _ScoredNetwork(copy(net.edges), score)
+                insort(nets, snet)
+                nethashes[nethash] = 1
+        elif score > nets[0].score and nethash not in nethashes:
+            nethashes.pop(hash(nets[0].edges))
             nets.remove(nets[0])
-            insort(nets, newnet)
-            nethashes[newnet] = 1
+
+            snet = _ScoredNetwork(copy(net.edges), score)
+            insort(nets, snet)
+            nethashes[nethash] = 1
 
     def tofile(self, filename=None):
         filename = filename or config.get('result.filename')
@@ -131,10 +131,14 @@ class LearnerResult:
                     list(reversed(self.networks))
         )
 
+#
+# Factory and other functions
+# 
 def merge(*args):
     """Returns a merged result object.
 
-    Example:
+    Example::
+
         merge(result1, result2, result3)
         results = [result1, result2, result3]
         merge(results)
@@ -166,4 +170,6 @@ def merge(*args):
     return newresults
 
 def fromfile(filename):
+    """Loads a learner result from file."""
+
     return cPickle.load(open(filename))
