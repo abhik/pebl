@@ -1,87 +1,96 @@
-"""Classes for representing networks and functions to create/modify them.
-
-A pebl network is a collection of nodes and directed edges between nodes.  
-
-Nodes are a list of pebl.data.Variable instances.
-Edges are stored in EdgeList instances.  This module provides two implementations,
-MatrixEdgeList for small networks and SparseEdgeList for large, sparse
-networks. Both offer the same functionality with different performance
-characteristics.
-
-Functions and methods accept and return nodes as numbers representing their
-indices and edges as tuples of integers corresponding to (srcnode, destnode).
-
-"""
+"""Classes for representing networks and functions to create/modify them."""
 
 import re
 import tempfile
-import subprocess
 import os
-from copy import copy
+from copy import copy, deepcopy
+from itertools import chain
+from bisect import insort
+from collections import deque
 
 import pydot
 import numpy as N
 
 from pebl.util import *
-from pebl.networkutil import *
-from pebl import config
-from pebl.config import StringParameter, oneof
 
-#
-# Classes for storing collection of edges
-#
-class EdgeList(object):   
-    """Abstract base class for collection of edges."""
+try:
+    from pebl import _network
+except:
+    _network = None
 
-    def __init__(self, num_nodes=0): pass
+class EdgeSet(object):
+    """
+    Maintains a set of edges.
 
-    def clear(self): 
-        """Clear the list of edges."""
-        pass
+    Performance characteristics:
+        - Edge insertion: O(1)
+        - Edge retrieval: O(n)
     
+    Uses adjacency lists but exposes an adjacency matrix interface via the
+    adjacency_matrix property.
+
+    """
+
+    def __init__(self, num_nodes=0):
+        self._outgoing = [[] for i in xrange(num_nodes)]
+        self._incoming = [[] for i in xrange(num_nodes)] 
+
+    def clear(self):
+        """Clear the list of edges."""
+        self.__init__(len(self._outgoing)) 
+
     def add(self, edge):
         """Add an edge to the list."""
-        pass
-    
+        self.add_many([edge])
+        
     def add_many(self, edges):
         """Add multiple edges."""
-        for edge in edges:
-            self.add(edge)
 
-    def remove(self, edge): 
+        for src,dest in edges:
+            if dest not in self._outgoing[src]: 
+                insort(self._outgoing[src], dest)
+                insort(self._incoming[dest], src)
+            
+    def remove(self, edge):
         """Remove edges from edgelist.
         
         If an edge to be removed does not exist, fail silently (no exceptions).
 
         """
-        pass
-        
+        self.remove_many([edge])
+
     def remove_many(self, edges):
         """Remove multiple edges."""
-        for edge in edges:
-            self.remove(edge)
 
-    def incoming(self, node): 
+        for src,dest in edges:
+            try: 
+                self._incoming[dest].remove(src)
+                self._outgoing[src].remove(dest)
+            except KeyError, ValueError: 
+                pass
+
+    def incoming(self, node):
         """Return list of nodes (as node indices) that have an edge to given node.
         
+        The returned list is sorted.
         Method is also aliased as parents().
         
         """
+        return self._incoming[node]
 
-        pass
-
-    def outgoing(self, node): 
+    def outgoing(self, node):
         """Return list of nodes (as node indices) that have an edge from given node.
         
+        The returned list is sorted.
         Method is also aliased as children().
 
         """
-        pass
+        return self._outgoing[node]
 
-    children = outgoing
     parents = incoming
-   
-    def __iter__(self): 
+    children = outgoing
+
+    def __iter__(self):
         """Iterate through the edges in this edgelist.
 
         Sample usage:
@@ -89,110 +98,83 @@ class EdgeList(object):
             print edge
 
         """
-        pass
-
-    def __contains__(self, edge):
-        """Check whether an edge exists in the edgelist.
-
-
-        Sample usage:
-        if (4,5) in edgelist: 
-            print "edge exists!"
-
-        """
-
-        # This is the naive implementation.  
-        # Subclasses should implement more efficient versions based on their
-        # internal datastructures.
-        for selfedge in self:
-            if edge == selfedge:
-                return True
-
-    def __eq__(self, other):
-        return self.nodes == other.nodes and self.edges == other.edges
-
-    def __len__(self):
-        pass
-
-
-class SparseEdgeList(EdgeList):
-    """
-    Maintains list of edges in two lists (for incoming and outgoing edges).
-
-    Performance characteristics:
-        - Edge insertion: O(1)
-        - Edge retrieval: O(n)
-    
-    If we didn't maintain two indices, retrieving an edge could take O(n^2) instead of O(n).
-    
-    For method documentation, see documentation for EdgeList.
-
-    """
-
-    def __init__(self, num_nodes=0, adjacency_matrix=None):
-        num_nodes = len(adjacency_matrix) if adjacency_matrix is not None else num_nodes
-
-        self._outgoing = [[] for i in xrange(num_nodes)]
-        self._incoming = [[] for i in xrange(num_nodes)] 
-
-
-        if adjacency_matrix is not None:
-            for src, dest in zip(*N.nonzero(self.adjacency_matrix)):
-                self._outgoing[src].append(dest)
-                self._incoming[dest].append(src)
-
-    def _resize(self, num_nodes):
-        """Resize the internal indices."""
-
-        self._incoming.extend([] for i in xrange(len(self._incoming), num_nodes))
-        self._outgoing.extend([] for i in xrange(len(self._outgoing), num_nodes))
-
-    def clear(self):
-        self._incoming = [[] for i in xrange(len(self._incoming))]
-        self._outgoing = [[] for i in xrange(len(self._outgoing))]
-
-    def add(self, edge):
-        src,dest = edge
-
-        if dest not in self._outgoing[src]:
-            self._outgoing[src].append(dest)
-        if src not in self._incoming[dest]:
-            self._incoming[dest].append(src)
         
-    def remove(self, edge):
-        src,dest = edge
-        try: 
-            self._incoming[dest].remove(src)
-            self._outgoing[src].remove(dest)
-        except ValueError: 
-            pass
-
-    def incoming(self, node):
-        return self._incoming[node]
-
-    def outgoing(self, node):
-        return self._outgoing[node]
-
-    parents = incoming
-    children = outgoing
-
-    def __iter__(self):
         for src, dests in enumerate(self._outgoing):
             for dest in dests:
                 yield (src, dest)
 
-    @property
-    def adjacency_matrix(self):
-        size = len(self._outgoing)
-        edges = N.zeros((size, size), dtype=bool)
-       
-        selfedges = list(self)
-        if selfedges:
-            edges[unzip(selfedges)] = True
+    def __eq__(self, other):
+        for out1,out2 in zip(self._outgoing, other._outgoing):
+            if out1 != out2:
+                return False
+        return True
 
-        return edges
-    
+    def __hash__(self):
+        return hash(tuple(tuple(s) for s in self._outgoing))
+        
+    def __copy__(self):
+        other = EdgeSet.__new__(EdgeSet)
+        other._outgoing = [[i for i in lst] for lst in self._outgoing]
+        other._incoming = [[i for i in lst] for lst in self._incoming]
+        return other
+
+    def as_tuple(self):
+        return tuple(tuple(s) for s in self._outgoing)
+
+    @extended_property
+    def adjacency_matrix():
+        """Set or get edges as an adjacency matrix.
+
+        The adjacency matrix is a boolean numpy.ndarray instance.
+
+        """
+
+        def fget(self):
+            size = len(self._outgoing)
+            adjmat = N.zeros((size, size), dtype=bool)
+            selfedges = list(self)
+            if selfedges:
+                adjmat[unzip(selfedges)] = True
+            return adjmat
+
+        def fset(self, adjmat):
+            self.clear()
+            for edge in zip(*N.nonzero(adjmat)):
+                self.add(edge)
+
+        return locals()
+
+    @extended_property
+    def adjacency_lists():
+        """Set or get edges as two adjacency lists.
+
+        Property returns/accepts two adjacency lists for outgoing and incoming
+        edges respectively. Each adjacency list if a list of sets.
+
+        """
+
+        def fget(self):
+            return self._outgoing, self._incoming
+
+        def fset(self, adjlists):
+            if len(adjlists) is not 2:
+                raise Exception("Specify both outgoing and incoming lists.")
+           
+            # adjlists could be any iterable. convert to list of lists
+            _outgoing, _incoming = adjlists
+            self._outgoing = [list(lst) for lst in _outgoing]
+            self._incoming = [list(lst) for lst in _incoming]
+
+        return locals()
+
     def __contains__(self, edge):
+        """Check whether an edge exists in the edgelist.
+
+        Sample usage:
+        if (4,5) in edges: 
+            print "edge exists!"
+
+        """
         src, dest = edge
 
         try:
@@ -204,157 +186,9 @@ class SparseEdgeList(EdgeList):
         return sum(len(out) for out in self._outgoing)
 
 
-class MatrixEdgeList(EdgeList):
-    """
-    Maintains list of edges in a boolean adjacency matrix.
-
-    Performance characteristics:
-        - Edge insertion: O(1)
-        - Edge retrieval: O(1)
-
-    Memory requirements might be deemed too high for sparse networks with a large number of nodes.
-    
-    For method documentation, see documentation for EdgeList.
-
-    """
-
-    def __init__(self, num_nodes=0, adjacency_matrix=None):
-        if adjacency_matrix is not None:
-            self.adjacency_matrix = adjacency_matrix
-        else:
-            self.adjacency_matrix = N.zeros((num_nodes, num_nodes), dtype=bool)
-        
-    def _resize(self, num_nodes):
-        newedges = N.zeros((num_nodes, num_nodes), dtype=bool)
-        old_num_nodes = self.adjacency_matrix.shape[0]
-
-        for i in range(old_num_nodes):
-            for j in range(old_num_nodes):
-                newedges[i][j] = self.adjacency_matrix[i][j]
-
-        self.adjacency_matrix = newedges
-
-    def clear(self):
-        self.adjacency_matrix = N.zeros(self.adjacency_matrix.shape, dtype=bool)
-
-    def add(self, edge):
-        self.adjacency_matrix[edge] = True
-
-    def remove(self, edge):
-        try: 
-            self.adjacency_matrix[edge] = False
-        except ValueError:
-            pass # if edge does not exist, ignore error silently.
-
-    def incoming(self, node):
-        return self.adjacency_matrix[:,node].nonzero()[0].tolist()
-
-    def outgoing(self, node):
-        return self.adjacency_matrix[node].nonzero()[0].tolist()
-    
-    parents = incoming
-    children = outgoing
-
-    def __iter__(self):
-        for src, dest in zip(*N.nonzero(self.adjacency_matrix)):
-            yield (src, dest)
-    
-    def __contains__(self, edge): 
-        try:
-            return self.adjacency_matrix[edge]
-        except:
-            return False
-    
-    def __eq__(self, other):
-        return (self.adjacency_matrix == other.adjacency_matrix).all()
-
-    def __len__(self):
-        return self.adjacency_matrix.nonzero()[0].size
-
-
-class MatrixEdgeList__PythonListImplementation(MatrixEdgeList):
-    def __init__(self, num_nodes=0, adjacency_matrix=None):
-        self.num_nodes = num_nodes or len(adjacency_matrix)
-        if adjacency_matrix is not None:
-            self.adjacency_matrix = adjacency_matrix
-        else:
-            self.adjacency_matrix = [[False for i in xrange(num_nodes)] for j in xrange(num_nodes)]
-        
-    def _resize(self, num_nodes):
-        self.adjacency_matrix = [[False for i in xrange(num_nodes)] for j in xrange(num_nodes)]
-
-    def clear(self):
-        num_nodes = self.num_nodes
-        self.adjacency_matrix = [[False for i in xrange(num_nodes)] for j in xrange(num_nodes)]
-        
-    def add(self, edge):
-        self.adjacency_matrix[edge[0]][edge[1]] = True
-
-    def remove(self, edge):
-        self.adjacency_matrix[edge[0]][edge[1]] = False
-
-    def incoming(self, node):
-       return [i for i in xrange(self.num_nodes) if self.adjacency_matrix[i][node]]
-
-    def outgoing(self, node):
-       return [i for i in xrange(self.num_nodes) if self.adjacency_matrix[node][i]]
-
-    parents = incoming
-    children = outgoing
-
-    def __iter__(self):
-        am = self.adjacency_matrix
-        nodes = range(self.num_nodes)
-        return ((i,j) for i in nodes for j in nodes if am[i][j]) 
-
-    def __contains__(self, edge): 
-        try:
-            return self.adjacency_matrix[edge[0]][edge[1]]
-        except:
-            return False
-
-    def __eq__(self, other):
-        self.adjacency_matrix == other.adjacency_matrix
-
-    def __len__(self):
-        return sum(row.count(True) for row in self.adjacency_matrix)
-
-
-#
-# Pebl's network class
-#
 class Network(object):
-    """ A network is a collection of edges between nodes."""
+    """A network is a set of nodes and directed edges between nodes"""
     
-    #
-    # Parameters
-    #
-    cyclechecker = StringParameter(
-        'network.cyclechecker',
-        'Algorithm to determine whether a network contains a cycle.',
-        oneof('dfs', 'eigenvalue'),
-        'dfs'
-    )
-
-    randomizer = StringParameter(
-        'network.randomizer',
-        'Algorithm for generating radmon networks.',
-        oneof('naive', 'chain'),
-        'naive'
-    )
-   
-    #
-    # Class variables
-    #
-    cyclecheckers = {
-        'dfs': DFSCycleChecker,
-        'eigenvalue': EigenValueCycleChecker
-    }
-
-    randomizers = {
-        'naive': NaiveNetworkRandomizer
-    }
-
 
     #
     # Public methods
@@ -364,22 +198,25 @@ class Network(object):
 
         nodes is a list of pebl.data.Variable instances.
         edges can be:
-            * any EdgeList instance
+
+            * an EdgeSet instance
             * a list of edge tuples
-            * an adjacency matrix (as boolean numpy.ndarray)
+            * an adjacency matrix (as boolean numpy.ndarray instance)
             * string representation (see Network.as_string() for format)
 
         """
         
         self.nodes = nodes
+        self.nodeids = range(len(nodes))
 
         # add edges
-        if isinstance(edges, EdgeList):
+        if isinstance(edges, EdgeSet):
             self.edges = edges
         elif isinstance(edges, N.ndarray):
-            self.edges = MatrixEdgeList(adjacency_matrix=edges)
+            self.edges = EdgeSet(len(edges))
+            self.edges.adjacency_matrix = edges    
         else:
-            self.edges = MatrixEdgeList(num_nodes=len(self.nodes))
+            self.edges = EdgeSet(len(self.nodes))
             if isinstance(edges, list):
                 self.edges.add_many(edges)
             elif isinstance(edges, str) and edges:
@@ -387,21 +224,43 @@ class Network(object):
                 edges = [tuple([int(n) for n in e.split(',')]) for e in edges]
                 self.edges.add_many(edges)
 
-        # select implementation for self.is_acyclic()
-        cyclechecker = config.get('network.cyclechecker')
-        self.is_acyclic = self.cyclecheckers[cyclechecker](self)
-        
-        # select implementation for self.randomize()
-        randomizer = config.get('network.randomizer')
-        self.randomize = self.randomizers[randomizer](self)
-        
-    
+    def is_acyclic(self, roots=None):
+        """Uses a depth-first search (dfs) to detect cycles."""
+
+        roots = list(roots) if roots else self.nodeids
+        return _network.is_acyclic(self.edges._outgoing, roots, [])
+
+    def is_acyclic_python(self, roots=None):
+        """Uses a depth-first search (dfs) to detect cycles."""
+
+        def _isacyclic(tovisit, visited):
+            if tovisit.intersection(visited):
+                # already visited a node we need to visit. thus, cycle!
+                return False
+
+            for n in tovisit:
+                # check children for cycles
+                if not _isacyclic(set(children(n)), visited.union([n])):
+                    return False
+
+            # got here without returning false, so no cycles below rootnodes
+            return True
+
+        #---------------
+
+        children = self.edges.children
+        roots = set(roots) if roots else set(range(len(self.nodes)))
+        return _isacyclic(roots, set())
+
+
     # TODO: test
     def copy(self):
         """Returns a copy of this network."""
-        return Network(self.nodes, self.edges.adjacency_matrix.copy())    
-       
+        newedges = EdgeSet(len(self.nodes))
+        newedges.adjacency_lists = deepcopy(self.edges.adjacency_lists)
 
+        return Network(self.nodes, newedges)    
+       
     def layout(self, width=400, height=400, dotpath="dot"): 
         """Determines network layout using Graphviz's dot algorithm.
 
@@ -411,7 +270,6 @@ class Network(object):
         The resulting node positions are saved in network.node_positions.
 
         """
-
 
         tempdir = tempfile.mkdtemp(prefix="pebl")
         dot1 = os.path.join(tempdir, "1.dot")
@@ -499,4 +357,50 @@ class Network(object):
 def fromdata(data_):
     """Creates a network from the variables in the dataset."""
     return Network(data_.variables)
+
+def random_network(nodes, required_edges=[], prohibited_edges=[]):
+    """Creates a random network with the given set of nodes.
+
+    Can specify required_edges and prohibited_edges to control the resulting
+    random network.  
+    
+    """
+
+    def _randomize(net, density=None):
+        n_nodes = len(net.nodes)
+        density = density or 1.0/n_nodes
+        max_attempts = 50
+
+        for attempt in xrange(max_attempts):
+            # create an random adjacency matrix with given density
+            adjmat = N.random.rand(n_nodes, n_nodes)
+            adjmat[adjmat >= (1.0-density)] = 1
+            adjmat[adjmat < 1] = 0
+            
+            # add required edges
+            for src,dest in required_edges:
+                adjmat[src][dest] = 1
+
+            # remove prohibited edges
+            for src,dest in prohibited_edges:
+                adjmat[src][dest] = 0
+
+            # remove self-loop edges (those along the diagonal)
+            adjmat = N.invert(N.identity(n_nodes).astype(bool))*adjmat
+            
+            # set the adjaceny matrix and check for acyclicity
+            net.edges.adjacency_matrix = adjmat.astype(bool)
+
+            if net.is_acyclic():
+                return net
+
+        # got here without finding a single acyclic network.
+        # so try with a less dense network
+        return _randomize(density/2)
+
+    # -----------------------
+
+    net = Network(nodes)
+    _randomize(net)
+    return net
 
