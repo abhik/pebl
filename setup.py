@@ -34,7 +34,7 @@ setup(
     # scripts
     entry_points = {
         'console_scripts': [
-            'pebl = pebl:main'
+            'pebl = pebl.pebl_script:main'
         ]
     },
 
@@ -43,4 +43,7 @@ setup(
         Extension('pebl._network', sources=['src/pebl/_network.c']),
         Extension('pebl._cpd', sources=['src/pebl/_cpd.c'], include_dirs=[numpy.get_include()]),
     ],
+
+    # py2app
+    app = ["pebl-main.py"],
 )
