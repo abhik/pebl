@@ -161,12 +161,12 @@ print_cpt(CPT *cpt) {
 
 // delete/deallocate the cpt
 // if _oldcpt is null, we just set it to this cpt instead of freeing memory.
-void 
+int 
 _dealloc_cpt(CPT *cpt) {
     // _oldcpt doesn't exist, so set it to current cpt
     if (_oldcpt == NULL) {
         _oldcpt = cpt;
-        return;
+        return 0;
     }
 
     // _oldcpt exists, so just free this one
@@ -177,20 +177,23 @@ _dealloc_cpt(CPT *cpt) {
     PyMem_Free(cpt->counts);
     PyMem_Free(cpt->offsets);
     PyMem_Free(cpt);
+    return 1;
 }
 
 /*****************************************************************************/
 
 PyObject *
 dealloc_cpt(PyObject *self, PyObject *args) {
-    int pycpt;
+    PyObject pycpt;
 
-    if (!PyArg_ParseTuple(args, "i", &pycpt)) {
+    if (!PyArg_ParseTuple(args, "O", &pycpt)) {
         return NULL;
     }
 
-    CPT *cpt = (CPT*) pycpt;
-    _dealloc_cpt(cpt);
+    CPT *cpt = (CPT*) PyInt_AsSsize_t(&pycpt);
+    if (_dealloc_cpt(cpt)) {
+        PY_DECREF(pycpt);
+    }
 
     Py_RETURN_NONE;
 }
