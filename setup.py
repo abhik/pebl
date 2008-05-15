@@ -22,7 +22,8 @@ setup(
         'nose >= 0.9',          # testing framework
         'pydot',                # to output network as dot file
         'pyparsing >= 1.4.7',   # required by pydot but not specified in its setup
-        'sphinx'                # documentation generation
+        'sphinx',               # documentation generation
+        'simplejson',           # for html results
     ],
     
     # data files, resources, etc
