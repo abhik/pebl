@@ -29,7 +29,6 @@ class XgridDeferredResult(DeferredResult):
         rst = result.fromfile(os.path.join(tmpdir,'result.pebl'))
         shutil.rmtree(tmpdir)  
 
-        print rst
         return rst
  
     @property
@@ -39,48 +38,45 @@ class XgridDeferredResult(DeferredResult):
 
 
 class XgridController(_BaseController):
-
     #
     # Parameters
     #
-    _pcontroller = config.StringParameter(
-        'xgrid.controller',
-        'Hostname or IP of the Xgrid controller.',
-        default=''
+    _params = (
+        config.StringParameter(
+            'xgrid.controller',
+            'Hostname or IP of the Xgrid controller.',
+            default=''
+        ),
+        config.StringParameter(
+            'xgrid.password',
+            'Password for the Xgrid controller.',
+            default=''
+        ),
+        config.StringParameter(
+            'xgrid.grid',
+            'Id of the grid to use at the Xgrid controller.',
+            default='0'
+        ),
+        config.FloatParameter(
+            'xgrid.pollinterval',
+            'Time (in secs) to wait between polling the Xgrid controller.',
+            default=60.0
+        ),
+        config.StringParameter(
+            'xgrid.peblpath',
+            'Full path to the pebl script on Xgrid agents.',
+            default='pebl'
+        )
     )
 
-    _ppassword = config.StringParameter(
-        'xgrid.password',
-        'Password for the Xgrid controller.',
-        default=''
-    )
+    def __init__(self, **options):
+        """Create a XGridController.
 
-    _pgrid = config.StringParameter(
-        'xgrid.grid',
-        'Id of the grid to use at the Xgrid controller.',
-        default='0'
-    )
-
-    _ppoll = config.FloatParameter(
-        'xgrid.pollinterval',
-        'Time (in secs) to wait between polling the Xgrid controller.',
-        default=60.0
-    )
-
-    _ppeblpath = config.StringParameter(
-        'xgrid.peblpath',
-        'Full path to the pebl script on Xgrid agents.',
-        default='pebl'
-    )
-
-    def __init__(self, controller=None, password=None, grid=None,
-                 pollinterval=None, peblpath=None): 
+        Any config param for 'xgrid' can be passed in via options.
+        Use just the option part of the parameter name.
         
-        self.controller = controller or config.get('xgrid.controller')
-        self.password = password or config.get('xgrid.password')
-        self.gridnum = grid or config.get('xgrid.grid')
-        self.pollinterval = pollinterval or config.get('xgrid.pollinterval')
-        self.peblpath = peblpath or config.get('xgrid.peblpath')
+        """
+        config.setparams(self, options)
 
     @property
     def _grid(self):

@@ -250,3 +250,10 @@ def configobj(params):
         configobj.set(section, name, value)
 
     return configobj
+
+
+def setparams(obj, options):
+    """Sets attributes of self based on options and pebl.config."""
+    for p in getattr(obj, '_params', []):
+        setattr(obj, p.option, options.get(p.option, get(p.name)))
+

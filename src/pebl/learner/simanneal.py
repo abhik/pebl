@@ -4,7 +4,6 @@ from math import exp
 from pebl import network, result, evaluator, config
 from pebl.learner import Learner
 
-
 class SALearnerStatistics:
     def __init__(self, starting_temp, delta_temp, max_iterations_at_temp):
         self.temp = starting_temp
@@ -29,53 +28,45 @@ class SimulatedAnnealingLearner(Learner):
     #
     # Parameters
     #
-    _pstart_temp = config.FloatParameter(
-        'simanneal.start_temp',
-        "Starting temperature for a run.",
-        config.atleast(0.0),
-        default=100.0
+    _params = (
+        config.FloatParameter(
+            'simanneal.start_temp',
+            "Starting temperature for a run.",
+            config.atleast(0.0),
+            default=100.0
+        ),
+        config.FloatParameter(
+            'simanneal.delta_temp',
+            'Change in temp between steps.',
+            config.atleast(0.0),
+            default=0.5
+        ),
+        config.IntParameter(
+            'simanneal.max_iters_at_temp',
+            'Max iterations at any temperature.',
+            config.atleast(0),
+            default=100
+        ),
+        config.StringParameter(
+            'simanneal.seed',
+            'Starting network for a greedy search.',
+            default=''
+        )
     )
 
-    _pdelta_temp = config.FloatParameter(
-        'simanneal.delta_temp',
-        'Change in temp between steps.',
-        config.atleast(0.0),
-        default=0.5
-    )
-
-    _pmax_iters = config.IntParameter(
-        'simanneal.max_iters_at_temp',
-        'Max iterations at any temperature.',
-        config.atleast(0),
-        default=100
-    )
-
-    _pseed = config.StringParameter(
-        'simanneal.seed',
-        'Starting network for a greedy search.',
-        default=''
-    )
-
-    def __init__(self, data_=None, prior_=None, start_temp=None,
-                 delta_temp=None, max_iters_at_temp=None, seed=None):
+    def __init__(self, data_=None, prior_=None, **options):
         """Create a Simulated Aneaaling learner.
 
-        start_temp, delta_temp, max_iters_at_temp and seed can be specified via
-        the constructor or configuration parameters.
-       
+        Any config param for 'simanneal' can be passed in via options.
+        Use just the option part of the parameter name.
+        
         """
 
         super(SimulatedAnnealingLearner,self).__init__(data_, prior_)
-        self.start_temp = start_temp or config.get('simanneal.start_temp')
-        self.delta_temp = delta_temp or config.get('simanneal.delta_temp')
-        self.max_iters_at_temp = max_iters_at_temp or \
-                                 config.get('simanneal.max_iters_at_temp')
-
-        self.seed = seed or \
-                    network.Network(self.data.variables,
-                                    config.get('simanneal.seed'))
-
-
+        config.setparams(self, options)
+        if not isinstance(self.seed, network.Network):
+            self.seed = network.Network(self.data.variables, self.seed)
+        
     def run(self):
         """Run the learner."""
 
@@ -88,7 +79,8 @@ class SimulatedAnnealingLearner(Learner):
         self.result.start_run()
         curscore = self.evaluator.score_network()
         
-        # temperature decays exponentially, so we'll never get to 0. So, we continue until temp < 1
+        # temperature decays exponentially, so we'll never get to 0. 
+        # So, we continue until temp < 1
         while self.stats.temp >= 1:
             try:
                 self._alter_network_randomly()

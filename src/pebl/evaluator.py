@@ -5,8 +5,7 @@ import random
 
 import numpy as N
 
-from pebl import data, cpd, prior,config, network
-from pebl.config import IntParameter, StringParameter
+from pebl import data, cpd, prior, config, network
 from pebl.util import *
 
 N.random.seed()
@@ -302,49 +301,45 @@ class MissingDataNetworkEvaluator(NetworkEvaluator):
     #
     # Parameters
     #
-    burnin = IntParameter(
-        'gibbs.burnin',
-        'Burn-in period for the gibbs sampler (specified as a multiple ' + \
-        'of the number of missing values)',
-        default=10
+    _params = (
+        config.IntParameter(
+            'gibbs.burnin',
+            """Burn-in period for the gibbs sampler (specified as a multiple of
+            the number of missing values)""",
+            default=10
+        ),
+        config.StringParameter(
+            'gibbs.max_iterations',
+            """Stopping criteria for the gibbs sampler.
+            
+            The number of Gibb's sampler iterations to run. Should be a valid
+            python expression using the variable n (number of missing values).
+            Examples:
+
+                * n**2  (for n-squared iterations)
+                * 100   (for 100 iterations)
+            """,
+            default="n**2"
+        )
     )
 
-    stop = StringParameter(
-        'gibbs.stopping_criteria',
-        """Stopping criteria for the gibbs sampler.
-        
-        Should be a valid python expression that evaluates to true when gibbs
-        should stop. It can use the following variables:
-
-            * iters: number of iterations
-            * n: number of missing values
-        
-        Examples:
-
-            * iters > n**2  (for n-squared iterations)
-            * iters > 100   (for 100 iterations)
-        """,
-        default="iters > n**2"
-    )
-
-    def __init__(self, data_, network_, prior_=None, localscore_cache=None):
+    def __init__(self, data_, network_, prior_=None, localscore_cache=None, 
+                 **options): 
         """Create a network evaluator for use with missing values.
 
         This evaluator uses a Gibb's sampler for sampling over the space of
         possible completions for the missing values.
        
+        Any config param for 'gibbs' can be passed in via options.
+        Use just the option part of the parameter name.
+
         """
 
         super(MissingDataNetworkEvaluator, self).__init__(data_, network_,
                                                          prior_)
         self._localscore = None  # no cache w/ missing data
-        self.burnin = config.get('gibbs.burnin')
-        stop = config.get('gibbs.stopping_criteria')
-        try:
-            self.stopping_criteria = lambda iters,n: eval(stop) 
-        except:
-            raise Exception("Gibb's stopping criteria is invalid: %s" % stop)
-
+        config.setparams(self, options)
+        
     def _init_state(self):
         parents = self.network.edges.parents
 
@@ -412,23 +407,13 @@ class MissingDataNetworkEvaluator(NetworkEvaluator):
         
         self.data.observations[unzip(indices)] = assignedvals
 
-    def score_network(self, net=None, stopping_criteria=None, gibbs_state=None):
+    def score_network(self, net=None, gibbs_state=None):
         """Score a network.
 
         If net is provided, scores that. Otherwise, score network previously
         set.
 
-        stopping_criteria is the stopping criteria for the Gibb's sampler. It
-        can be any callable (function, lambda, etc) that returns True when the
-        criteria for stopping is met::
-        
-            def stop(iters, n):
-                # n is the number of missing values (not missing variables)
-                return iters  > n ** 2
-
-        The default stopping_criteria is to run for N**2 iterations.
-        The stopping criteria can also be set using the gibbs.stopping_criteria
-        configuration parameter.
+        The default stopping criteria is to run for n**2 iterations.
 
         gibbs_state is the state of a previous run of the Gibb's sampler.  With
         this, one can do the following::
@@ -457,6 +442,8 @@ class MissingDataNetworkEvaluator(NetworkEvaluator):
         # create some useful lists and local variables
         missing_indices = unzip(N.where(self.data.missing==True))
         num_missingvals = len(missing_indices)
+        n = num_misingvals
+        max_iterations = eval(self.max_iterations)
         arities = [v.arity for v in self.data.variables]
         chosenscores = []
 
@@ -469,7 +456,7 @@ class MissingDataNetworkEvaluator(NetworkEvaluator):
         #    1) score net with each possible value (based on node's arity)
         #    2) using a probability wheel, sample a value from the possible values
         iters = 0
-        while not stop(iters, num_missingvals):
+        while iters < max_iterations:
             for row,col in missing_indices:
                 scores = [self._alter_data_and_score(row, col, val) \
                              for val in xrange(arities[col])]
@@ -599,7 +586,7 @@ class MissingDataMaximumEntropyNetworkEvaluator(MissingDataNetworkEvaluator):
         self._alter_data(row1, col1, val1)
         self._alter_data(row2, col2, val2) 
 
-    def score_network(self, net=None, stopping_criteria=None, gibbs_state=None):
+    def score_network(self, net=None, gibbs_state=None):
         """Score a network.
 
         If net is provided, scores that. Otherwise, score network previously
@@ -614,6 +601,8 @@ class MissingDataMaximumEntropyNetworkEvaluator(MissingDataNetworkEvaluator):
 
         # create some useful lists and counts
         num_missingvals = self.data.missing[self.data.missing == True].shape[0]
+        n = num_missingvals
+        max_iterations = eval(self.max_iterations)
         chosenscores = []
         
         # determine missing vars and samples
@@ -627,7 +616,7 @@ class MissingDataMaximumEntropyNetworkEvaluator(MissingDataNetworkEvaluator):
 
         # iteratively swap data randomly amond samples of a var and score
         iters = 0
-        while not stop(iters, num_missingvals):
+        while iters > max_iterations:
             for var in missingvars:  
                 for sample in missingsamples[var]:
                     score0 = self._score_network_core()

@@ -5,7 +5,7 @@ import cPickle
 # import everything to make sure that all config parameters get registered
 from pebl import config, data, network, learner, taskcontroller, result, prior, result, posterior
 from pebl.learner import greedy, simanneal, exhaustive
-from pebl.taskcontroller import serial, multiprocess, ec2, xgrid
+#from pebl.taskcontroller import serial, multiprocess, ec2, xgrid
 
 _pcwd = config.StringParameter(
     'pebl.workingdir',
@@ -23,8 +23,18 @@ def main():
     if len(sys.argv) < 2:
         print "Usage: %s configfile" % os.path.basename(sys.argv[0])
         sys.exit()
+
+    results = runpebl(sys.argv[1])
+
+    if all(isinstance(r, result.LearnerResult) for r in results):
+        finalresult = result.merge(results)
+        finalresult.tofile()
+    else:
+        cPickle.dump(results, open(config.get('result.filename'), 'w'))
+
     
-    config.read(sys.argv[1])
+def runpebl(configfile):
+    config.read(configfile)
     os.chdir(config.get('pebl.workingdir'))
 
     numtasks = config.get('learner.numtasks')
@@ -35,11 +45,7 @@ def main():
     results = controller.run(tasks)
     controller.stop()
 
-    if all(isinstance(r, result.LearnerResult) for r in results):
-        finalresult = result.merge(results)
-        finalresult.tofile()
-    else:
-        cPickle.dump(results, open(config.get('result.filename'), 'w'))
+    return results
 
 # -----------------------------
 if __name__ == '__main__':

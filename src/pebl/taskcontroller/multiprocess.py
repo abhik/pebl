@@ -14,10 +14,12 @@ class MultiProcessController(_BaseController):
     #
     # Parameters
     # 
-    _ppoolsize = config.IntParameter(
-        'multiprocess.poolsize',
-        'Number of processes to run concurrently (0 means no limit)',
-        default=0
+    _params = (
+            config.IntParameter(
+            'multiprocess.poolsize',
+            'Number of processes to run concurrently (0 means no limit)',
+            default=0
+        )
     )
         
     def __init__(self, poolsize=None):
@@ -28,7 +30,6 @@ class MultiProcessController(_BaseController):
         default it is big enough to run all processes concurrently.
 
         """
-
         self.poolsize = poolsize or config.get('multiprocess.poolsize')
 
     def run(self, tasks):

@@ -43,7 +43,6 @@ _ptasks = config.IntParameter(
 )
 
 
-
 class Learner(Task):
     def __init__(self, data_=None, prior_=None, **kw):
         self.data = data_ or data.fromconfig()
@@ -125,7 +124,6 @@ class Learner(Task):
         params = inspect.getmembers(self, lambda x: isinstance(x, config.Parameter))
         params = dict((p.name, p.value) for p in unzip(params,1))
         params['data.text'] = self.data.tostring()
-
 
         if ':' in config.get('learner.type'):
             # serializing a custom learner

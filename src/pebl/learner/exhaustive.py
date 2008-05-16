@@ -9,70 +9,49 @@ class ListLearner(Learner):
     #
     # Parameter
     #
-    _pnetworks = config.StringParameter(
-        'listlearner.networks',
-        'List of networks to score.',
-        default=''
+    _params = (
+        config.StringParameter(
+            'listlearner.networks',
+            """List of networks, one per line, in network.Network.as_string()
+            format.""", 
+            default=''
+        )
     )
 
-    def __init__(self, data_=None, prior_=None, iterable=None):
+    def __init__(self, data_=None, prior_=None, networks=None):
         """Create a ListLearner learner.
 
-        iterable can be any python iterable (list, set, generator, etc).
-
-        If you run the learner on a parallel platform (or manually call the
-        split() method), the iterable will be first converted to a static list.
-        Otherwise, it will simply iterate without first creating a list. 
+        networks should be a list of networks (as network.Network instances). 
 
         """
 
         super(ListLearner, self).__init__(data_, prior_)
-        self.iterable = iterable
-        if not self.iterable:
+        self.networks = networks
+        if not networks:
             variables = self.data.variables
             _net = lambda netstr: network.Network(variables, netstr)
             netstrings = config.get('listlearner.networks').splitlines()
-            self.iterable = (_net(s) for s in netstrings if s)
+            self.networks = (_net(s) for s in netstrings if s)
 
     def run(self):
-        iterable = self.iterable
         self.result = result.LearnerResult(self)
         self.evaluator = evaluator.fromconfig(self.data, prior_=self.prior)
 
         self.result.start_run()
-        for net in iterable:
+        for net in self.networks:
             self.result.add_network(net, self.evaluator.score_network(net))
         self.result.stop_run()
         return self.result
     
-    def toconfig(self):
-        # TODO: remove this limitation:
-        if not isinstance(self.prior, prior.NullPrior):
-            raise Exception(
-                """Currently, pebl can only generate tasks for learners with
-                NullPrior priors.  This will be fixed in the next version."""
-            )
-        
-        nets = list(self.iterable)
-        configobj = super(ListLearner, self).toconfig()
-
-        if not configobj.has_section('listlearner'):
-            configobj.add_section('listlearner')
-        configobj.set('listlearner', 'networks', 
-                      '\n'.join(n.as_string() for n in nets))
-
-        return configobj
-     
     def split(self, count):
         """Split the learner into multiple learners.
 
-        Converts the iterable passed in via the constructor into a static list
-        and then splits it into `count` parts. This is similar to MPI's scatter
-        functionality.
+        Splits self.networks into `count` parts. This is similar to MPI's
+        scatter functionality.
     
         """
 
-        nets = list(self.iterable)
+        nets = list(self.networks)
         numnets = len(nets)
         netspertask = numnets/count
 
@@ -84,4 +63,8 @@ class ListLearner(Learner):
 
         return [ListLearner(self.data, self.prior, nets[i:j])for i,j in indices]
 
-
+    def __getstate__(self):
+        # convert self.network from iterators or generators to a list
+        d = self.__dict__
+        d['networks'] = list(d['networks'])
+        return d
