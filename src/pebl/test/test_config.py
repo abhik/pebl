@@ -10,29 +10,29 @@ Doctests for pebl.config
 Define parameters
 ------------------
 
->>> config.StringParameter('test.param0', 'a param', default='foo')
-test.param0 = foo [str]: a param
+>>> config.StringParameter('test.param0', 'a param', default='foo').name
+'test.param0'
 
->>> config.StringParameter('test.param1', 'a param', config.oneof('foo', 'bar'))
-test.param1 = None [str]: a param
+>>> config.StringParameter('test.param1', 'a param', config.oneof('foo', 'bar')).name
+'test.param1'
 
->>> config.IntParameter('test.param2', 'a param', default=20)
-test.param2 = 20 [int]: a param
+>>> config.IntParameter('test.param2', 'a param', default=20).name
+'test.param2'
 
->>> config.IntParameter('test.param3', 'a param', config.atmost(100))
-test.param3 = None [int]: a param
+>>> config.IntParameter('test.param3', 'a param', config.atmost(100)).name
+'test.param3'
 
->>> config.IntParameter('test.param4', 'a param', config.atleast(100))
-test.param4 = None [int]: a param
+>>> config.IntParameter('test.param4', 'a param', config.atleast(100)).name
+'test.param4'
 
->>> config.IntParameter('test.param5', 'a param', config.between(10,100))
-test.param5 = None [int]: a param
+>>> config.IntParameter('test.param5', 'a param', config.between(10,100)).name
+'test.param5'
 
->>> config.IntParameter('test.param6', 'a param', lambda x: x == 50)
-test.param6 = None [int]: a param
+>>> config.IntParameter('test.param6', 'a param', lambda x: x == 50).name
+'test.param6'
 
->>> config.FloatParameter('test.param7', 'a param', config.between(1.3, 2.7))
-test.param7 = None [float]: a param
+>>> config.FloatParameter('test.param7', 'a param', config.between(1.3, 2.7)).name
+'test.param7'
 
 
 Test getting/setting parameter values
@@ -104,12 +104,12 @@ Value 150 is not valid for parameter test.param5. Parameter value should be betw
 Test the creation of configobj
 -------------------------------
 
->>> config.StringParameter('test.param0', 'a param', default='foo')
-test.param0 = foo [str]: a param
->>> config.StringParameter('test.param1', 'a param', default='foo')
-test.param1 = foo [str]: a param
->>> config.IntParameter('test1.param1', 'a param', default=5)
-test1.param1 = 5 [int]: a param
+>>> config.StringParameter('test.param0', 'a param', default='foo').name
+'test.param0'
+>>> config.StringParameter('test.param1', 'a param', default='foo').name
+'test.param1'
+>>> config.IntParameter('test1.param1', 'a param', default=5).name
+'test1.param1'
 >>> config.set('test.param1', 'foobar')
 >>> params = [config._parameters.get(x) for x in ('test.param0', 'test.param1', 'test1.param1')]
 >>> config.configobj(params).write(sys.stdout)

@@ -39,20 +39,20 @@ class TestEdgeSet:
         assert (0,3) in self.edges, "Can add edges to edgelist."
 
     def test_incoming(self):
-        assert self.edges.incoming(0) == set([]), "Testing edgelist.incoming"
-        assert self.edges.incoming(2) == set([0,1]), "Testing edgelist.incoming"
+        assert set(self.edges.incoming(0)) == set([]), "Testing edgelist.incoming"
+        assert set(self.edges.incoming(2)) == set([0,1]), "Testing edgelist.incoming"
     
     def test_outgoing(self):
-        assert self.edges.outgoing(2) == set([]), "Testing edgelist.outgoing"
-        assert self.edges.outgoing(0) == set([2,5]), "Testing edgelist.outgoing"
+        assert set(self.edges.outgoing(2)) == set([]), "Testing edgelist.outgoing"
+        assert set(self.edges.outgoing(0)) == set([2,5]), "Testing edgelist.outgoing"
     
     def test_parents(self):
-        assert self.edges.parents(0) == set([]), "Testing edgelist.parents"
-        assert self.edges.parents(2) == set([0,1]), "Testing edgelist.parents"
+        assert set(self.edges.parents(0)) == set([]), "Testing edgelist.parents"
+        assert set(self.edges.parents(2)) == set([0,1]), "Testing edgelist.parents"
     
     def test_children(self):
-        assert self.edges.children(2) == set([]), "Testing edgelist.children"
-        assert self.edges.children(0) == set([2,5]), "Testing edgelist.children"
+        assert set(self.edges.children(2)) == set([]), "Testing edgelist.children"
+        assert set(self.edges.children(0)) == set([2,5]), "Testing edgelist.children"
 
     def test_contains1(self):
         assert (0,2) in self.edges, "Can check if edge in edgelist."

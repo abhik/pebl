@@ -82,7 +82,7 @@ Testing the Posterior
 >>> mpost[:2][1].score
 -6.0
 >>> mpost.entropy
-0.52271400039735116
+0.522714000397
 >>> mpost.consensus_network(.5).as_string()
 '0,2;0,4;1,2;2,3;3,4'
 >>> mpost.consensus_network(.8).as_string()

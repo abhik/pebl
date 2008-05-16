@@ -80,7 +80,7 @@ array([[0, 0, 0],
        [0, 0, 0]])
 
 >>> nodecpd.loglikelihood()
--3.8712010109078907
+-3.87120101091
 >>> 
 
 
@@ -100,8 +100,7 @@ array([[0, 0, 0],
        [1, 0, 1],
        [0, 0, 0]])
 >>> nodecpd.loglikelihood()
--3.8712010109078907
-
+-3.87120101091
 
 2. Let's do a real replace data
 
@@ -116,8 +115,7 @@ array([[0, 0, 0],
        [1, 0, 1],
        [0, 0, 0]])
 >>> nodecpd.loglikelihood()
--2.7725887222397811
-
+-2.77258872224
 
 3. Can we undo without breaking something?
 
@@ -132,14 +130,13 @@ array([[0, 0, 0],
        [1, 0, 1],
        [0, 0, 0]])
 >>> nodecpd.loglikelihood()
--3.8712010109078907
-
+-3.87120101091
 
 4. Does it matter if we pass data as numpy.ndarray?
 
 >>> nodecpd.replace_data(array([0,1,1,0]), array([1,1,1,0]))
 >>> nodecpd.loglikelihood()
--2.7725887222397811
+-2.77258872224
 
 
 Can we properly handle nodes with no parents?
@@ -177,7 +174,7 @@ array([0])
 >>> newcpd.counts
 array([[2, 3, 5]])
 >>> newcpd.loglikelihood()
--4.0943445622221013
+-4.09434456222
 >>>
 
 """

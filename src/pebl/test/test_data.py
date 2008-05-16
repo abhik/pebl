@@ -98,7 +98,7 @@ array([<Sample: sample1>, <Sample: sample2>, <Sample: sample3>], dtype=object)
 >>> data3.observations
 array([[0, 0],
        [1, 1],
-       [1, 2]], dtype=int8)
+       [1, 2]])
 
 >>> [v.arity for v in data3.variables]
 [2, 3]
@@ -120,7 +120,7 @@ array([<DiscreteVariable: shh>, <DiscreteVariable: ptchp>], dtype=object)
 >>> data4.observations
 array([[0, 0],
        [1, 1],
-       [1, 2]], dtype=int8)
+       [1, 2]])
 
 
 Create a data object manually and test its features

@@ -383,7 +383,7 @@ class MissingDataNetworkEvaluator(NetworkEvaluator):
 
         if gibbs_state:
             # resuming from a previous gibbs run. so, no burnin required.
-            scoresum = logsum(N.concatenate(chosenscores, [gibbs_state.scoresum]))
+            scoresum = logsum(N.concatenate((chosenscores, [gibbs_state.scoresum])))
             numscores = len(chosenscores) + gibbs_state.numscores
         elif len(chosenscores) > burnin_period:
             # remove scores from burnin period.
@@ -442,14 +442,13 @@ class MissingDataNetworkEvaluator(NetworkEvaluator):
         # create some useful lists and local variables
         missing_indices = unzip(N.where(self.data.missing==True))
         num_missingvals = len(missing_indices)
-        n = num_misingvals
+        n = num_missingvals
         max_iterations = eval(self.max_iterations)
         arities = [v.arity for v in self.data.variables]
         chosenscores = []
 
         self._assign_missingvals(missing_indices, gibbs_state)
         self._init_state()
-        stop = stopping_criteria or self.stopping_criteria
 
         # Gibbs Sampling: 
         # For each missing value:
@@ -612,11 +611,10 @@ class MissingDataMaximumEntropyNetworkEvaluator(MissingDataNetworkEvaluator):
 
         self._assign_missingvals(missingvars, gibbs_state)
         self._init_state()
-        stop = stopping_criteria or self.stopping_criteria
 
         # iteratively swap data randomly amond samples of a var and score
         iters = 0
-        while iters > max_iterations:
+        while iters < max_iterations:
             for var in missingvars:  
                 for sample in missingsamples[var]:
                     score0 = self._score_network_core()
