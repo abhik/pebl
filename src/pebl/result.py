@@ -60,31 +60,24 @@ class LearnerResult:
     #
     # Parameters
     #
-    _pformat = config.StringParameter(
-        'result.format',
-        'Format of the result file.',
-        config.oneof('pickle'),
-        default='pickle'
+    _params = (
+        config.StringParameter(
+            'result.filename',
+            'The name of the result output file',
+            default='result.pebl'
+        ),
+        config.IntParameter(
+            'result.size',
+            """Number of top-scoring networks to save. Specify 0 to indicate that
+            all scored networks should be saved.""",
+            default=1000
+        )
     )
-
-    _pfilename = config.StringParameter(
-        'result.filename',
-        'The name of the result output file',
-        default='result.pebl'
-    )
-
-    _psize = config.IntParameter(
-        'result.numnetworks',
-        """Number of top-scoring networks to save. Specify 0 to indicate that
-        all scored networks should be saved.""",
-        default=1000
-    )
-
 
     def __init__(self, learner_=None, size=None):
         self.data = learner_.data if learner_ else None
         self.nodes = self.data.variables if self.data else None
-        self.size = size or config.get('result.numnetworks')
+        self.size = size or config.get('result.size')
         self.networks = []
         self.nethashes = {}
         self.runs = []
