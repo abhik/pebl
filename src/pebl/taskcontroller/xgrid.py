@@ -5,12 +5,11 @@ import tempfile
 
 try:
     import xg
-    XG_LOADED = True
 except:
-    XG_LOADED = False
+    xg = False
     
 from pebl import config, result
-from pebl.taskcontroller.base import _BaseController, DeferredResult
+from pebl.taskcontroller.base import _BaseSubmittingController, DeferredResult
 
 class XgridDeferredResult(DeferredResult):
     def __init__(self, grid, task):
@@ -37,7 +36,7 @@ class XgridDeferredResult(DeferredResult):
         return self.job.info(update=1).get('jobStatus') in ('Finished',)
 
 
-class XgridController(_BaseController):
+class XgridController(_BaseSubmittingController):
     #
     # Parameters
     #
@@ -80,7 +79,7 @@ class XgridController(_BaseController):
 
     @property
     def _grid(self):
-        if XG_LOADED:
+        if xg:
             cn = xg.Connection(self.controller, self.password)
             ct = xg.Controller(cn)
             return ct.grid(self.gridnum)
@@ -95,9 +94,10 @@ class XgridController(_BaseController):
 
         drs = []
         for task in tasks:
-            task._prepare_config(workingdir_is_tmp=False)
-            task.job = grid.submit(self.peblpath, 'config.txt', indir=task.cwd)
-            print "jobid:", task.job.jobID
+            task.cwd = tempfile.mkdtemp()
+            cPickle.dump(task, open(os.path.join(task.cwd, 'task.pebl'), 'w'))
+            task.job = grid.submit(self.peblpath, 'runtask task.pebl', 
+                                   indir=task.cwd)
             drs.append(XgridDeferredResult(grid, task))
         return drs
    
@@ -118,7 +118,4 @@ class XgridController(_BaseController):
                 time.sleep(self.pollinterval)
 
         return [dr.result for dr in done] 
-
-    def run(self, tasks):
-        return self.retrieve(self.submit(tasks))
 

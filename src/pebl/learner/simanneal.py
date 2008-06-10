@@ -2,7 +2,7 @@
 
 from math import exp
 from pebl import network, result, evaluator, config
-from pebl.learner import Learner
+from pebl.learner.base import Learner
 
 class SALearnerStatistics:
     def __init__(self, starting_temp, delta_temp, max_iterations_at_temp):
@@ -74,7 +74,7 @@ class SimulatedAnnealingLearner(Learner):
                                          self.max_iters_at_temp)
         self.result =  result.LearnerResult(self)
         self.evaluator = evaluator.fromconfig(self.data, self.seed, self.prior)
-        self.evaluator.set_network(self.seed.copy())
+        self.evaluator.score_network(self.seed.copy())
 
         self.result.start_run()
         curscore = self.evaluator.score_network()

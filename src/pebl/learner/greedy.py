@@ -2,7 +2,7 @@
 
 from pebl import network, result, evaluator
 from pebl.util import *
-from pebl.learner import *
+from pebl.learner.base import *
 
 class GreedyLearnerStatistics:
     def __init__(self):
@@ -77,9 +77,9 @@ class GreedyLearner(Learner):
 
         # max_time and max_iterations are mutually exclusive stopping critera
         if 'max_time' not in self.options:
-            self._stop = self._stop_after_iterations
+            _stop = self._stop_after_iterations
         else:
-            self._stop = self._stop_after_time
+            _stop = self._stop_after_time
             
         self.stats = GreedyLearnerStatistics()
         self.result = result.LearnerResult(self)
@@ -88,14 +88,15 @@ class GreedyLearner(Learner):
 
         first = True
         self.result.start_run()
-        while not stop:
-            self._run_without_restarts(randomize_net=(not first))
+        while not _stop():
+            self._run_without_restarts(_stop, self._restart, 
+                                       randomize_net=(not first))
             first = False
         self.result.stop_run()
 
         return self.result
 
-    def _run_without_restarts(self, randomize_net=True):
+    def _run_without_restarts(self, _stop, _restart, randomize_net=True):
         self.stats.restarts += 1
         self.stats.unimproved_iterations = 0
 
@@ -106,7 +107,7 @@ class GreedyLearner(Learner):
         self.stats.best_score = self.evaluator.score_network()
 
         # continue learning until time to stop or restart
-        while not (self._restart or self._stop):
+        while not (_restart() or _stop()):
             self.stats.iterations += 1
 
             try:
@@ -129,15 +130,12 @@ class GreedyLearner(Learner):
     #
     # Stopping and restarting criteria
     # 
-    @property
     def _stop_after_time(self):
         return self.stats.runtime > self.max_time
 
-    @property
     def _stop_after_iterations(self):
         return self.stats.iterations > self.max_iterations
 
-    @property
     def _restart(self):
         return self.stats.unimproved_iterations > self.max_unimproved_iterations
 

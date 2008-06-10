@@ -1,7 +1,7 @@
 """Classes and functions for doing exhaustive learning."""
 
 from pebl import prior, config, evaluator, result, network
-from pebl.learner import Learner
+from pebl.learner.base import Learner
 from pebl.taskcontroller.base import Task
 
 

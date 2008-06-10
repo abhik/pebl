@@ -4,6 +4,8 @@ import os, os.path
 import cPickle
 import thread, time
 import shutil 
+import tempfile
+from copy import copy
 
 from pebl import config, result
 from pebl.taskcontroller.base import _BaseController
@@ -39,7 +41,7 @@ class MultiProcessController(_BaseController):
         tasks will be queued.
 
         """
-
+        tasks = copy(tasks) # because we do tasks.pop() below..
         numtasks = len(tasks)
         poolsize = self.poolsize or numtasks
         running = {}
@@ -50,8 +52,10 @@ class MultiProcessController(_BaseController):
             # submit tasks (if below poolsize and tasks remain)
             for i in xrange(min(poolsize-len(running), len(tasks))):
                 task = tasks.pop()
-                task._prepare_config(workingdir_is_tmp=True)
-                pid = os.spawnlp(os.P_NOWAIT, PEBL, PEBL, opjoin(task.cwd, "config.txt"))
+                task.cwd = tempfile.mkdtemp()
+                cPickle.dump(task, open(opjoin(task.cwd, 'task.pebl'), 'w'))
+                pid = os.spawnlp(os.P_NOWAIT, PEBL, PEBL, "runtask", 
+                                 opjoin(task.cwd, "task.pebl"))
                 running[pid] = task
             
             # wait for any child process to finish
