@@ -7,13 +7,13 @@ import tempfile
 import sys
 
 from pebl import config, result
-from pebl.taskcontroller.ipy1 import IPy1Controller, IPy1DeferredResult
+from pebl.taskcontroller.ipy1 import IPython1Controller, IPython1DeferredResult
+from pebl.taskcontroller import ec2ipy1
 
-
-class EC2DeferredResult(IPy1DeferredResult):
+class EC2DeferredResult(IPython1DeferredResult):
     pass
 
-class EC2Controller(IPy1Controller):
+class EC2Controller(IPython1Controller):
     _params = (
         config.StringParameter(
             'ec2.config',
@@ -40,7 +40,7 @@ class EC2Controller(IPy1Controller):
     def start(self):
         self.ec2.create_instances(self.min_count, self.max_count)
         self.ec2.start_ipython1(engine_on_controller=True)
-        self.ipy1taskcontroller = IPy1Controller(self.ec2.task_controller_url) 
+        self.ipy1taskcontroller = IPython1Controller(self.ec2.task_controller_url) 
 
     def stop(self):
         self.ec2.terminate_instances()
