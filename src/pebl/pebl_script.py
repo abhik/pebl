@@ -30,8 +30,10 @@ viewhtml <resultfile> <outputdir>
 
 def usage(msg, exitcode=-1):
     print "Pebl: Python Envinronment for Bayesian Learning"
-    print "==============================================="
+    print "-----------------------------------------------"
+    print "\n==============================================="
     print "ERROR:", msg
+    print "===============================================\n"
     print USAGE
     sys.exit(exitcode)
 
