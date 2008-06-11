@@ -39,6 +39,12 @@ class EC2Controller(IPython1Controller):
 
     def start(self):
         self.ec2.create_instances(self.min_count, self.max_count)
+
+        print "Waiting for firewall ports to open up (10 secs)"
+        time.sleep(10) 
+
+        print "Updating pebl on worker nodes"
+        self.ec2.remote_all("cd /usr/local/src/pebl; svn update; python setup.py install")
         self.ec2.start_ipython1(engine_on_controller=True)
         self.ipy1taskcontroller = IPython1Controller(self.ec2.task_controller_url) 
 
