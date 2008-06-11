@@ -1,8 +1,11 @@
 """Classes and functions for Simulated Annealing learner"""
 
 from math import exp
+import random
+
 from pebl import network, result, evaluator, config
 from pebl.learner.base import Learner
+
 
 class SALearnerStatistics:
     def __init__(self, starting_temp, delta_temp, max_iterations_at_temp):
@@ -83,11 +86,10 @@ class SimulatedAnnealingLearner(Learner):
         # So, we continue until temp < 1
         while self.stats.temp >= 1:
             try:
-                self._alter_network_randomly()
+                newscore = self._alter_network_randomly_and_score()
             except CannotAlterNetworkException:
                 return
 
-            newscore = self.evaluator.score_network()
             self.result.add_network(self.evaluator.network, newscore)
 
             if self._accept(newscore):

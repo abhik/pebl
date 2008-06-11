@@ -7,7 +7,6 @@ from pebl import config, data, network, learner, taskcontroller, result, prior, 
 from pebl.learner import greedy, simanneal, exhaustive
 #from pebl.taskcontroller import serial, multiprocess, ec2, xgrid
 
-
 USAGE = """
 Usage: %s <action> [<action parameters>]
 
@@ -76,11 +75,16 @@ def runtask(picklefile=None):
         picklefile = picklefile or sys.argv[2]
     except:
         usage("Please specify a pickled task file.")
-
-    outfile = os.path.join(os.path.dirname(picklefile), 'result.pebl')
-    learntask = cPickle.load(open(picklefile))
-    result = learntask.run()
+   
+    outfile = os.path.join(os.path.dirname(picklefile), 'result.pebl')  
+    picklestr = open(picklefile).read()
+    result = runtask_picklestr(picklestr)
     result.tofile(outfile)
+    
+def runtask_picklestr(picklestr):
+    learntask = cPickle.loads(picklestr)
+    result = learntask.run()
+    return result
 
 def viewhtml(resultfile=None, outdir=None):
     try:
