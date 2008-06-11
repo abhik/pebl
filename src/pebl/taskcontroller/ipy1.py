@@ -8,7 +8,6 @@ import cPickle
 
 from pebl import config, result
 from pebl.taskcontroller.base import _BaseSubmittingController, DeferredResult
-from pebl.pebl_script import runpebl
 
 try:
     import ipython1.kernel.api as ipy1kernel
@@ -63,7 +62,7 @@ class IPython1Controller(_BaseSubmittingController):
         drs = []
         for task in tasks:
             ipy1task = ipy1kernel.Task(
-                "from pebl.pebl_script import runtask; result = runtask(task)",
+                "from pebl.pebl_script import runtask_picklestr; result = runtask_picklestr(task)",
                 resultNames = ['result'],
                 setupNS = {'task': cPickle.dumps(task)}
             )
