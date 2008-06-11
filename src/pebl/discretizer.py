@@ -42,10 +42,9 @@ def maximum_entropy_discretize(indata, includevars=None, excludevars=[], numbins
         newvar.__dict__.update(oldvar.__dict__)
         indata.variables[v] = newvar
 
-    # if discretized all variables, then cast observations to byte or int
+    # if discretized all variables, then cast observations to int
     if len(includevars) == indata.variables.size:
-        dtype = 'byte' if indata.observations.max() < 255 else 'int'
-        indata.observations = indata.observations.astype(dtype)
+        indata.observations = indata.observations.astype(int)
     
     return indata
 
