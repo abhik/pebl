@@ -46,11 +46,11 @@ class EC2Controller(IPython1Controller):
         self.ec2.terminate_instances()
 
     def submit(self, tasks):
-        self.ipy1taskcontroller.submit(tasks)
+        return self.ipy1taskcontroller.submit(tasks)
 
     def retrieve(self, deferred_results):
-        self.ipy1taskcontroller.retrieve(deferred_results)
+        return self.ipy1taskcontroller.retrieve(deferred_results)
 
     def run(self, tasks):
-        self.ipy1taskcontroller.run(tasks)
+        return self.ipy1taskcontroller.run(tasks)
 
