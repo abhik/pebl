@@ -1,5 +1,7 @@
 """Learner that implements a greedy learning algorithm"""
 
+import time
+
 from pebl import network, result, evaluator
 from pebl.util import *
 from pebl.learner.base import *
@@ -131,11 +133,11 @@ class GreedyLearner(Learner):
     # Stopping and restarting criteria
     # 
     def _stop_after_time(self):
-        return self.stats.runtime > self.max_time
+        return self.stats.runtime >= self.max_time
 
     def _stop_after_iterations(self):
-        return self.stats.iterations > self.max_iterations
+        return self.stats.iterations >= self.max_iterations
 
     def _restart(self):
-        return self.stats.unimproved_iterations > self.max_unimproved_iterations
+        return self.stats.unimproved_iterations >= self.max_unimproved_iterations
 
