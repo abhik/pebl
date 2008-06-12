@@ -1,0 +1,1 @@
+This directory contains tests that either cannot be automated or that we don't want to run everytime we run unit tests. 
