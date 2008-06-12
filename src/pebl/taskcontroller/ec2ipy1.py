@@ -75,7 +75,7 @@ class EC2Cluster:
         self._wait_till_instances_in_state('running', 'instances_running', sleepfor)
 
     def wait_till_instances_terminated(self, sleepfor=10):
-        self._wait_till_instances_in_state('terminated', 'instances_trminated', sleepfor)
+        self._wait_till_instances_in_state('terminated', 'instances_terminated', sleepfor)
 
     def create_instances(self, min_count=1, max_count=None):
         # if max not specified, it's the same as the min
@@ -93,6 +93,21 @@ class EC2Cluster:
         self.instances = self.reservation.instances
 
         self.wait_till_instances_running()
+
+        print "Waiting for firewall ports to open up (10 secs)"
+        time.sleep(10) 
+
+        print "Trying to connect to worker nodes using ssh" 
+        self._check_ssh_connection()
+
+    def _check_ssh_connection(self):
+        instances = [i for i in self.instances]
+
+        while instances:
+            for i in instances:
+                time.sleep(1) # so we're not bombarding the servers
+                if 0 == self.remote(i, "ls /"):
+                    instances.remove(i)
 
     def start_ipython1(self, engine_on_controller=False):
         if not 'instances_running' in self._state:
@@ -213,10 +228,9 @@ class EC2Cluster:
 
         cmdline = template % d  
         
-        if test:
-            print cmdline
-        else:
-            os.system(cmdline)
+        print "Trying: ", cmdline
+        if not test:
+            return os.system(cmdline)
 
     def remote_all(self, cmd='scp', src=None, dest=None, test=False):
         for i in self.instances:
