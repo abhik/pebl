@@ -16,10 +16,6 @@ def should_raise_exception(param, value):
 
 class TestConfig:
     def setUp(self):
-        # we use the config module as a pythonic singleton..
-        # so, it must be reloaded with every test
-        reload(config)
-
         config.StringParameter('test.param0', 'a param', default='foo')
         config.StringParameter('test.param1', 'a param', config.oneof('foo', 'bar'))
         config.IntParameter('test.param2', 'a param', default=20)
