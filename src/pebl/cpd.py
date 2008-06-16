@@ -144,6 +144,9 @@ class MultinomialCPD_C(MultinomialCPD_Py):
     """C implementation of Multinomial cpd."""
 
     def __init__(self, data_):
+        if not _cpd:
+            raise Exception("_cpd C extension module not loaded.")
+
         self.data = data_
         arities = [v.arity for v in data_.variables]
         num_parents = len(arities)-1

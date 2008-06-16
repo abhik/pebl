@@ -28,8 +28,8 @@ viewhtml <resultfile> <outputdir>
 """ % os.path.basename(sys.argv[0])
 
 def usage(msg, exitcode=-1):
-    print "Pebl: Python Envinronment for Bayesian Learning"
-    print "-----------------------------------------------"
+    print "Pebl: Python Environment for Bayesian Learning"
+    print "----------------------------------------------"
     print "\n==============================================="
     print "ERROR:", msg
     print "===============================================\n"
