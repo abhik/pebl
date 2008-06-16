@@ -112,7 +112,7 @@ class TestNetwork:
             self.net.edges.add(edge)
 
     def test_as_pydot(self):
-        assert len(self.net.as_pydot().edge_list) == 3, "Can convert to pydot graph instance."
+        assert len(self.net.as_pydot().get_edges()) == 3, "Can convert to pydot graph instance."
 
     # We can only check whether the image is created or not. Cannot check if it is correct.
     def test_as_image(self):
