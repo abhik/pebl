@@ -25,8 +25,8 @@ class Prior(object):
 
     """
 
-    def __init__(self, num_nodes, energy_matrix=None, edges_mustexist=[], 
-                 edges_mustnotexist=[], constraints=[], weight=1.0):
+    def __init__(self, num_nodes, energy_matrix=None, required_edges=[], 
+                 prohibited_edges=[], constraints=[], weight=1.0):
         
         self.energy_matrix = energy_matrix
         
@@ -35,7 +35,7 @@ class Prior(object):
         # matrix and if the required edges are not in the adjacency matrix, the
         # result will not be all ones.
         self.mustexist = N.ones((num_nodes, num_nodes), dtype=bool)
-        for src,dest in edges_mustexist:
+        for src,dest in required_edges:
             self.mustexist[src,dest] = 0
 
         # mustnotexist are edges that cannot be present.  They are set as one
@@ -43,7 +43,7 @@ class Prior(object):
         # adjacency matrix and if the specified edges are present, the result
         # will not be all zeros.
         self.mustnotexist = N.zeros((num_nodes, num_nodes), dtype=bool)
-        for src,dest in edges_mustnotexist:
+        for src,dest in prohibited_edges:
             self.mustnotexist[src,dest] = 1
 
         self.constraints = constraints
@@ -51,12 +51,12 @@ class Prior(object):
 
     # TODO: test
     @property
-    def edges_mustexist(self):
+    def required_edges(self):
         return N.transpose(N.where(self.mustexist == 0)).tolist()
 
     # TODO: test
     @property
-    def edges_mustnotexist(self):
+    def prohibited_edges(self):
         return N.transpose(N.where(self.mustnotexist == 1)).tolist()
 
     def loglikelihood(self, net):
