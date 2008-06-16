@@ -1,128 +1,117 @@
-"""
-==================
-Testing pebl.prior
-==================
-
->>> from pebl import data, network, prior
->>> import numpy as N
-
-Test out the null prior
-------------------------
-
->>> net = network.Network([data.DiscreteVariable(i,3) for i in xrange(5)], "0,1;3,2;2,4")
->>> p1 = prior.NullPrior()
->>> p1.loglikelihood(net)
-0.0
->>> net.edges.add((1,4))
->>> p1.loglikelihood(net)
-0.0
-
-Test out the uniform prior
---------------------------
-**Note:** The uniform prior assumes equal likelihood for each edge; thus, it
-penalizes networks with large number of edges.
-
->>> p2 = prior.UniformPrior(len(net.nodes))
->>> p2.loglikelihood(net)
--2.0
->>> net.edges.remove((1,4))
->>> p2.loglikelihood(net)
--1.5
-
->>> p3 = prior.UniformPrior(len(net.nodes), weight=2.0)
->>> p3.loglikelihood(net)
--3.0
->>> net.edges.add((1,4))
->>> p3.loglikelihood(net)
--4.0
+import numpy as N
+from pebl import data, network, prior
 
 
-Test out hard priors (constraints)
-----------------------------------
->>> p4 = prior.Prior(5, edges_mustexist=[(1,4),(0,1)], edges_mustnotexist=[(3,4)], constraints=[lambda am:not am[0,4]])
+def test_null_prior():
+    net = network.Network(
+        [data.DiscreteVariable(i,3) for i in xrange(5)], 
+        "0,1;3,2;2,4;1,4"
+    )
+    p1 = prior.NullPrior()
+    assert p1.loglikelihood(net) == 0.0
+    net.edges.add((1,4))
+    assert p1.loglikelihood(net) == 0.0
 
->>> list(net.edges)
-[(0, 1), (1, 4), (2, 4), (3, 2)]
+class TestUniformPrior:
+    ## **Note:** The uniform prior assumes equal likelihood for each edge;
+    ## thus, it penalizes networks with large number of edges.
 
->>> p4.loglikelihood(net)
-0.0
+    def setUp(self):
+        self.net = network.Network(
+            [data.DiscreteVariable(i,3) for i in xrange(5)], 
+            "0,1;3,2;2,4;1,4"
+        )
+        self.p = prior.UniformPrior(len(self.net.nodes))
+        self.p2 = prior.UniformPrior(len(self.net.nodes), weight=2.0)
 
->>> net.edges.remove((1,4))
->>> p4.loglikelihood(net)
--inf
+    def test_net1(self):
+        assert self.p.loglikelihood(self.net) == -2.0
 
->>> net.edges.add((1,4))
->>> net.edges.add((3,4))
->>> p4.loglikelihood(net)
--inf
+    def test_net2(self):
+        self.net.edges.remove((1,4))
+        assert self.p.loglikelihood(self.net) == -1.5
 
->>> net.edges.remove((3,4))
->>> net.edges.add((0,4))
->>> p4.loglikelihood(net)
--inf
+    def test_weight1(self):
+        assert self.p2.loglikelihood(self.net) == -4.0
 
->>> net.edges.remove((0,4))
->>> net.edges.add((3,2))
->>> p4.loglikelihood(net)
-0.0
+    def test_weight2(self):
+        self.net.edges.remove((1,4))
+        assert self.p2.loglikelihood(self.net) == -3.0
 
-Test out soft priors
----------------------
->>> energymat = N.ones((5,5)) * .5
+class TestHardPriors:
+    def setUp(self):
+        self.net = network.Network(
+            [data.DiscreteVariable(i,3) for i in xrange(5)], 
+            "0,1;3,2;2,4;1,4"
+        )
+        self.p = prior.Prior(
+            len(self.net.nodes), 
+            required_edges=[(1,4),(0,1)], 
+            prohibited_edges=[(3,4)], 
+            constraints=[lambda am: not am[0,4]]
+        )
+ 
+    def test_net1(self):
+        assert self.p.loglikelihood(self.net) == 0.0
 
->>> energymat 
-array([[ 0.5,  0.5,  0.5,  0.5,  0.5],
-       [ 0.5,  0.5,  0.5,  0.5,  0.5],
-       [ 0.5,  0.5,  0.5,  0.5,  0.5],
-       [ 0.5,  0.5,  0.5,  0.5,  0.5],
-       [ 0.5,  0.5,  0.5,  0.5,  0.5]])
+    def test_net2(self):
+        self.net.edges.remove((1,4))
+        assert self.p.loglikelihood(self.net) == float('-inf')
+        
+    def test_net3(self):
+        self.net.edges.add((3,4))
+        assert self.p.loglikelihood(self.net) == float('-inf')
 
->>> energymat[1,4] = 0
->>> energymat[0,1] = 0
->>> energymat[3,4] = 5
+    def test_net4(self):
+        self.net.edges.add((0,4))     
+        assert self.p.loglikelihood(self.net) == float('-inf')
 
->>> energymat
-array([[ 0.5,  0. ,  0.5,  0.5,  0.5],
-       [ 0.5,  0.5,  0.5,  0.5,  0. ],
-       [ 0.5,  0.5,  0.5,  0.5,  0.5],
-       [ 0.5,  0.5,  0.5,  0.5,  5. ],
-       [ 0.5,  0.5,  0.5,  0.5,  0.5]])
+    def test_net5(self):
+        self.net.edges.add((3,2))     
+        assert self.p.loglikelihood(self.net) == 0.0
+        
+class TestSoftPriors:
+    def setUp(self):
+        self.net = network.Network(
+            [data.DiscreteVariable(i,3) for i in xrange(5)], 
+            "0,1;2,4;1,2"
+        )
+        energymat = N.array([[ 0.5,  0. ,  0.5,  0.5,  0.5],
+                             [ 0.5,  0.5,  0.5,  0.5,  0. ],
+                             [ 0.5,  0.5,  0.5,  0.5,  0.5],
+                             [ 0.5,  0.5,  0.5,  0.5,  5. ],
+                             [ 0.5,  0.5,  0.5,  0.5,  0.5]])
+        self.p = prior.Prior(len(self.net.nodes), energymat)
+        
+    def test_net1(self):
+        assert self.p.loglikelihood(self.net) == -1.0
 
->>> p5 = prior.Prior(5, energymat)
+    def test_net2(self):
+        self.net.edges.remove((2,4))
+        self.net.edges.add((1,4))
+        assert self.p.loglikelihood(self.net) == -0.5
 
->>> net.edges.clear()
->>> net.edges.add_many([(0,1), (2,4), (1,2)])
+    def test_net3(self):
+        self.net.edges.add((3,4))
+        assert self.p.loglikelihood(self.net) == -6.0
 
->>> p5.loglikelihood(net)
--1.0
+class TestCombinedPriors:
+    def setUp(self):
+        self.net = network.Network(
+            [data.DiscreteVariable(i,3) for i in xrange(5)], 
+            "0,1;1,3;1,2"
+        )
+        energymat = N.array([[ 0.5,  0. ,  0.5,  0.5,  0.5],
+                             [ 0.5,  0.5,  0.5,  0.5,  0. ],
+                             [ 0.5,  0.5,  0.5,  0.5,  0.5],
+                             [ 0.5,  0.5,  0.5,  0.5,  5. ],
+                             [ 0.5,  0.5,  0.5,  0.5,  0.5]])
+        self.p = prior.Prior(len(self.net.nodes), energymat, required_edges=[(1,2)])
 
->>> net.edges.add((1,4))
->>> net.edges.remove((2,4))
->>> p5.loglikelihood(net)
--0.5
+    def test_net1(self):
+        assert self.p.loglikelihood(self.net) == -1.0
 
->>> net.edges.remove((1,4))
->>> net.edges.add((3,4))
->>> p5.loglikelihood(net)
--5.5
-
-Test both soft and hard priors together
----------------------------------------
-
->>> p6 = prior.Prior(5, energymat, edges_mustexist=[(1,2)])
-
->>> net.edges.clear()
->>> net.edges.add_many([(1,2),(0,1),(1,3)])
->>> p6.loglikelihood(net)
--1.0
-
->>> net.edges.remove((1,2))
->>> p6.loglikelihood(net)
--inf
->>>
-"""
-
-if __name__ == '__main__':
-    from pebl.test import run
-    run()
+    def test_net2(self):
+        self.net.edges.remove((1,2))
+        assert self.p.loglikelihood(self.net) == float('-inf')
 
