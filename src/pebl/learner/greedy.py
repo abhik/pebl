@@ -37,7 +37,7 @@ class GreedyLearner(Learner):
             'greedy.max_unimproved_iterations',
             """Maximum number of iterations without score improvement before
             a restart.""", 
-            default='restart_after_max_unimproved_iterations(500)'
+            default=500
         ),
         config.StringParameter(
             'greedy.seed',
