@@ -36,6 +36,10 @@ class EC2Controller(IPython1Controller):
     def __init__(self, **options):
         config.setparams(self, options)
         self.ec2 = ec2ipy1.EC2Cluster(self.config)
+        self.start()
+
+    def __del__(self):
+        self.stop()
 
     def start(self):
         self.ec2.create_instances(self.min_count, self.max_count)

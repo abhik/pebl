@@ -155,6 +155,7 @@ class EC2Cluster:
         print "ssh -i %s root@%s" % (self.config['credential'], controller_ip)
 
         self._state.append('ipython1_running')
+        time.sleep(6) # waiting for cluster to be setup
         return True
 
     def reboot_instances(self):

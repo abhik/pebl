@@ -24,8 +24,6 @@ class DeferredResult(object):
 #
 class _BaseController(object):
     def __init__(self, *args, **kwargs): pass
-    def start(self): pass
-    def stop(self): pass
     def run(self, tasks): pass
 
 class _BaseSubmittingController(_BaseController):
