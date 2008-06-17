@@ -135,13 +135,7 @@ class TestNetwork:
         assert self.net.as_string() == self.expected_string, "Create string representation."
 
     def test_layout(self):
-        """net.layout() should either raise an exception or do the layout."""
-
-        try:
-            self.net.layout()
-        except:
-            return
-
+        self.net.layout()
         assert hasattr(self.net, 'node_positions'), "Has node_positions"
         assert len(self.net.node_positions[0]) == 2, "Node positions are 2 values (x and y)"
         assert isinstance(self.net.node_positions[0][0], (int, float)), "Positions are in floats or ints"
