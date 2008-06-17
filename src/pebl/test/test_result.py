@@ -1,7 +1,13 @@
 from copy import deepcopy
+import tempfile
+import shutil
+import os.path
+
 from numpy import allclose
+
 from pebl import result
 from pebl import data, network
+from pebl.learner import greedy
 from pebl.test import testfile
 
 class TestScoredNetwork:
@@ -123,14 +129,19 @@ class TestPosterior(TestMergingResults):
         expected = '1,2;2,3;3,4'
         assert self.posterior.consensus_network(.8).as_string() == expected
 
+class TestHtmlReport:
+    def setUp(self):
+        dat = data.fromfile(testfile("testdata5.txt"))
+        dat.discretize()
+        g = greedy.GreedyLearner(dat, max_iterations=100)
+        g.run()
+        self.result = g.result
+        self.tempdir = tempfile.mkdtemp()
+    
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
 
-
-    """
-
-
-"""
-
-if __name__ == '__main__':
-    from pebl.test import run
-    run()
+    def test_report_creation(self):
+        self.result.tohtml(self.tempdir)
+        assert os.path.exists(os.path.join(self.tempdir, 'index.html'))
 
