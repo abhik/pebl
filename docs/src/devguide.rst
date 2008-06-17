@@ -12,7 +12,7 @@ Setting up a development environment for Pebl
 1. Checkout pebl code from the subversion repository::
 
 
-    svn co https://pebl-project.googlecode.com/svn/trunk pebl
+    svn co http://pebl-project.googlecode.com/svn/trunk pebl
 
  
 2. Install development-related dependencies. Install nose (:command:`easy_install nose`)
