@@ -6,7 +6,7 @@ import numpy
 
 setup(
     name='Pebl',
-    version='0.9.5',
+    version='0.9.8',
     description='Python Environment for Bayesian Learning',
     package_dir={'': 'src'},
     packages=find_packages('src'),
@@ -22,7 +22,6 @@ setup(
         'nose >= 0.9',          # testing framework
         'pydot',                # to output network as dot file
         'pyparsing >= 1.4.7',   # required by pydot but not specified in its setup
-        'sphinx',               # documentation generation
         'simplejson',           # for html results
     ],
     
@@ -44,7 +43,4 @@ setup(
         Extension('pebl._network', sources=['src/pebl/_network.c']),
         Extension('pebl._cpd', sources=['src/pebl/_cpd.c'], include_dirs=[numpy.get_include()]),
     ],
-
-    # py2app
-    app = ["pebl-main.py"],
 )
