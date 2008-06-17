@@ -1,3 +1,5 @@
+.. _apiref:
+
 API Reference
 =============
 
@@ -20,5 +22,7 @@ Modules:
     taskcontroller/multiprocess
     taskcontroller/serial
     taskcontroller/xgrid
+    taskcontroller/ipy1
+    taskcontroller/ec2
     util
 

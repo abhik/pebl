@@ -13,7 +13,6 @@ Contents:
     intro
     install
     tutorial
-    userguide
     devguide
     paramref
     apiref
