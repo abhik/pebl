@@ -26,9 +26,9 @@ easy_install lets you install python packages and their requirements in one easy
 Install Pebl
 ------------
 
-Running the following command will install pebl and all required dependencies::
+Running the following commands will install pebl and all required dependencies::
 
-
+    easy_install numpy
     easy_install pebl
 
 

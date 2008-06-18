@@ -18,7 +18,7 @@ setup(
 
     # required dependencies
     install_requires=[
-        'numpy >= 1.0.3',       # matrices, linear algebra, etc
+        # 'numpy >= 1.0.3',       # matrices, linear algebra, etc
         'nose >= 0.9',          # testing framework
         'pydot',                # to output network as dot file
         'pyparsing >= 1.4.7',   # required by pydot but not specified in its setup
