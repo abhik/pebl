@@ -9,7 +9,7 @@ Tutorial
 
 This tutorial is organized as a series of examples that highlight some of
 Pebl's various features.  It is assumed that the reader is familiar with
-Bayesian networks and the python language.
+Bayesian networks and the python language and has read the :ref:`intro`.
 
 Pebl includes a python library and a command line application that can be used
 with a configuration file.  The pebl application is limited compared to the

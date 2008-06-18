@@ -1,5 +1,7 @@
-Introduction
-============
+.. _intro:
+
+Pebl Introduction
+==================
 
 Pebl is a python library and command line application for inferring the
 structure of a Bayesian network given prior knowledge and observations.  Pebl
