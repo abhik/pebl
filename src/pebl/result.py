@@ -118,11 +118,21 @@ class LearnerResult:
             nethashes[nethash] = 1
 
     def tofile(self, filename=None):
+        """Save the result to a python pickle file.
+
+        The result can be later read using the result.fromfile function.
+        """
+
         filename = filename or config.get('result.filename')
         with open(filename, 'w') as fp:
             cPickle.dump(self, fp)
     
     def tohtml(self, outdir):
+        """Create a html report of the result.
+
+        outdir is a directory to create html files inside.
+        """
+
         if _can_create_html:
             HtmlFormatter().htmlreport(self, outdir)
         else:
@@ -130,6 +140,7 @@ class LearnerResult:
 
     @property
     def posterior(self):
+        """Returns a posterior object for this result."""
         return posterior.from_sorted_scored_networks(
                     self.nodes, 
                     list(reversed(self.networks))
