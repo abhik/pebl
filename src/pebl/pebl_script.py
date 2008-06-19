@@ -61,12 +61,10 @@ def run(configfile=None):
     config.read(configfile)
 
     numtasks = config.get('learner.numtasks')
-    tasks = [learner.fromconfig() for i in xrange(numtasks)]
+    tasks = learner.fromconfig().split(numtasks)
 
     controller = taskcontroller.fromconfig()
-    controller.start()
     results = controller.run(tasks)
-    controller.stop()
     
     result.merge(results).tofile()
 
