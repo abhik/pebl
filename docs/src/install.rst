@@ -6,7 +6,8 @@ no longer than a few minutes. If you experience any problems, please contact me
 at abhikshah@gmail.com.
 
 Pebl is known to run on Linux and Mac OSX and should also run on Windows and
-any platform that supports Python 2.5 and numpy. Pebl depends on the following packages:
+any platform that supports Python 2.5 and numpy. Pebl depends on the following
+packages:
 
  * Numpy: tested with version 1.0.4 but should work with other recent versions
  * Pydot: tested with version 1.0.2
@@ -22,13 +23,12 @@ Install Python 2.5
 
 Check what version of Python you have with::
 
-
     python --version
-
 
 You can download Python 2.5 from http://python.org/download
 
 .. note:: Pebl requires Python 2.5 or greater and will not run under earlier versions.
+
 
 Install easy_install
 --------------------
@@ -40,16 +40,35 @@ to be installed separately.
 1. Download ez_setup.py from http://peak.telecommunity.com/dist/ez_setup.py
 2. Run :command:`python ez_setup.py` to install easy_install
 
+Run :command:`easy_install --help` to make sure that it is in your path. On
+unix-type systems, it is usually installed in /usr/bin/ and on Windows in
+C:\\Python2.5\\Scripts\\
+
+
+Install Numpy
+-------------
+
+Numpy can be tricky to install because it require C and Fortran compilers and
+several libraries. You can try installing it from source using easy_install::
+
+    easy_install numpy
+
+If that doesn't work or if you'd rather install using a binary package, consult
+http://www.scipy.org/Download.
+
 Install Pebl
 ------------
 
-Running the following commands will install pebl and all required dependencies::
+You can now install (or upgrade) pebl and it's required dependencies using
+easy_install::
 
-    easy_install numpy
     easy_install pebl
 
-
 .. note:: The current version of Pebl is 0.9.8.
+
+If you have downloaded the source code for Pebl (or installing pebl from svn),
+you can run :command:`sudo python setup.py install` from pebl's root directory
+instead.
 
 Installing optional dependencies
 ---------------------------------
@@ -71,7 +90,7 @@ For the XGrid Task Controller
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The Xgrid task controller only runs on platforms where XGrid is available
-(currently, only Mac OSX). Pebl use the PyXG package to access the XGrid
+(currently, only Mac OSX). Pebl uses the PyXG package to access the XGrid
 controller::
 
     easy_install PyXg
@@ -83,7 +102,6 @@ For the IPython1 Task Controller
 You will need to install both IPython and IPython1.  IPython1 is in active
 development and pebl requires a specific version. Once, IPython1 is oficially
 released, we will use that package::
-
 
     easy_install ipython
 
@@ -101,11 +119,9 @@ Guide
 <http://docs.amazonwebservices.com/AWSEC2/2008-02-01/GettingStartedGuide/>`_ at
 Amazon for further information.
 
-Pebl uses the boto package to connect to EC2. Install it with::
-
+Pebl uses the boto package to interact with EC2::
 
     easy_install boto
-
 
 Also see the instructions above for installing dependencies for the IPython1
 Task Controller (which is required by the EC2 Task Controller).
@@ -114,11 +130,10 @@ Task Controller (which is required by the EC2 Task Controller).
 For developing Pebl
 ^^^^^^^^^^^^^^^^^^^
 
-Pebl developers will also need nose for testing and sphinx for generating html documentation::
+Pebl developers will also need nose for testing and sphinx for generating html
+documentation::
 
 
     easy_install nose
     easy_install sphinx
-
-
 
