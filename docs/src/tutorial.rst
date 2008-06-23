@@ -17,6 +17,7 @@ library but requires no programming.  Each example in this tutorial will
 include a python script and a pebl configuration file that runs the same 
 analysis (when possible).
 
+.. note:: This tutorial uses Pebl 0.9.8
 
 Introducing the Problem
 -----------------------
