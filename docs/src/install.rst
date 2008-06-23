@@ -1,7 +1,20 @@
 Installation
 =============
 
-Unfortunatly, installing pebl is not a one-stop process although it should take no longer than a few minutes. If you experience any problems, please contact me at abhikshah@gmail.com.
+Unfortunatly, installing pebl is not a one-stop process although it should take
+no longer than a few minutes. If you experience any problems, please contact me
+at abhikshah@gmail.com.
+
+Pebl is known to run on Linux and Mac OSX and should also run on Windows and
+any platform that supports Python 2.5 and numpy. Pebl depends on the following packages:
+
+ * Numpy: tested with version 1.0.4 but should work with other recent versions
+ * Pydot: tested with version 1.0.2
+ * Matplotlib (optional): tested with version 0.91.2 but should work with other
+   recent versions
+ * Graphviz (optional): any recent version of dot and neato 
+ * IPython1 (optional): curently, require r2815 from svn trunk
+ * boto (optional): any recent version
 
 
 Install Python 2.5
@@ -15,10 +28,14 @@ Check what version of Python you have with::
 
 You can download Python 2.5 from http://python.org/download
 
+.. note:: Pebl requires Python 2.5 or greater and will not run under earlier versions.
+
 Install easy_install
 --------------------
 
-easy_install lets you install python packages and their requirements in one easy step. Unfortunately, easy_install is not distributed with python and needs to be installed separately.
+easy_install lets you install python packages and their requirements in one
+easy step. Unfortunately, easy_install is not distributed with python and needs
+to be installed separately.
 
 1. Download ez_setup.py from http://peak.telecommunity.com/dist/ez_setup.py
 2. Run :command:`python ez_setup.py` to install easy_install
@@ -35,12 +52,14 @@ Running the following commands will install pebl and all required dependencies::
 Installing optional dependencies
 ---------------------------------
 
-Certain features of pebl require additional dependencies. You only need to install these if you need the optional features.
+Certain features of pebl require additional dependencies. You only need to
+install these if you need the optional features.
 
 For creating HTML reports of Pebl results
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Pebl uses Graphviz to visualize networks and matplotlib for plotting. If using Pebl on a cluster, these don't need to be installed on the worker nodes.
+Pebl uses Graphviz to visualize networks and matplotlib for plotting. If using
+Pebl on a cluster, these don't need to be installed on the worker nodes.
 
 1. Install Graphviz from http://www.graphviz.org/Download.php
 2. Install matplotlib from http://matplotlib.sourceforge.net/installing.html
@@ -49,18 +68,19 @@ Pebl uses Graphviz to visualize networks and matplotlib for plotting. If using P
 For the XGrid Task Controller
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Pebl use the PyXG package to access the XGrid controller. Unfortunately, the version of PyXG installable via easy_install has a bug. You need to install from svn::
+The Xgrid task controller only runs on platforms where XGrid is available
+(currently, only Mac OSX). Pebl use the PyXG package to access the XGrid
+controller::
 
-
-    svn co http://pyxg.scipy.org/svn/pyxg/trunk PyXG
-    cd PyXG
-    python setup.py install
+    easy_install PyXg
 
 
 For the IPython1 Task Controller
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You will need to install both IPython and IPython1.  IPython1 is in active development and pebl requires a specific version. Once, IPython1 is oficially released, we will use that package::
+You will need to install both IPython and IPython1.  IPython1 is in active
+development and pebl requires a specific version. Once, IPython1 is oficially
+released, we will use that package::
 
 
     easy_install ipython
@@ -70,11 +90,14 @@ You will need to install both IPython and IPython1.  IPython1 is in active devel
     sudo python setup.py install
 
 
-
 For the EC2 Task Controller
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Before you can use Amazon's EC2 platform, you need to register with Amazon and create the required authentication credentials.  Consult the `Getting Started Guide <http://docs.amazonwebservices.com/AWSEC2/2008-02-01/GettingStartedGuide/>`_ at Amazon for further information.
+Before you can use Amazon's EC2 platform, you need to register with Amazon and
+create the required authentication credentials.  Consult the `Getting Started
+Guide
+<http://docs.amazonwebservices.com/AWSEC2/2008-02-01/GettingStartedGuide/>`_ at
+Amazon for further information.
 
 Pebl uses the boto package to connect to EC2. Install it with::
 

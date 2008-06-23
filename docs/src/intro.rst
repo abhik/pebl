@@ -3,7 +3,7 @@
 Pebl Introduction
 ==================
 
-Pebl is a python library and command line application for inferring the
+Pebl is a python library and command line application for learning the
 structure of a Bayesian network given prior knowledge and observations.  Pebl
 includes the following features:
 
@@ -15,9 +15,15 @@ includes the following features:
  * Calculates edge marginals and consensus networks
  * Presents results in a variety of formats
 
+Availability
+------------
+Pebl is licensed under a permissive `MIT-style license
+<http://pebl-project.googlecode.com/svn/trunk/LICENSE.txt>`_ and can be
+downloaded from its `Google code site <http://pebl-project.googlecode.com/>`_
+or from the `Python Package Index <http://pypi.python.org/pypi/pebl>`_.
+
 Concepts   
 --------
-
 All Pebl analysis include :term:`data`, a :term:`learner` and a :term:`result`.  They may also
 include :term:`prior models` and :term:`task controllers`.  
 
