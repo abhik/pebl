@@ -49,6 +49,8 @@ Running the following commands will install pebl and all required dependencies::
     easy_install pebl
 
 
+.. note:: The current version of Pebl is 0.9.8.
+
 Installing optional dependencies
 ---------------------------------
 
