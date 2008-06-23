@@ -15,6 +15,19 @@ setup(
     author='Abhik Shah',
     author_email='abhikshah@gmail.comm',
     url='http://pebl-project.googlecode.com',
+    download_url='http://pypi.python.org/pypi/pebl',
+    license='MIT',
+    zip_safe=False,
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Environment :: Console',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+        'Topic :: Scientific/Engineering :: Artificial Intelligence',
+        'Topic :: Scientific/Engineering :: Bio-Informatics',
+    ],
 
     # required dependencies
     install_requires=[
