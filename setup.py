@@ -14,6 +14,20 @@ WARNING: The C extensions could not be compiled.
 Below is the output showing how the compilation failed:
 """
 
+long_desc = """
+Pebl is a python library and command line application for learning the
+structure of a Bayesian network given prior knowledge and observations.  Pebl
+includes the following features:
+
+ * Can learn with observational and interventional data
+ * Handles missing values and hidden variables using exact and heuristic
+   methods 
+ * Provides several learning algorithms; makes creating new ones simple
+ * Has facilities for transparent parallel execution
+ * Calculates edge marginals and consensus networks
+ * Presents results in a variety of formats
+"""
+
 # This class allows C extension building to fail.
 # from http://simplejson.googlecode.com/svn/trunk/setup.py
 class ve_build_ext(build_ext):
@@ -48,8 +62,9 @@ speedymodules = Feature(
 
 setup(
     name='pebl',
-    version='0.9.9',
+    version='0.9.10',
     description='Python Environment for Bayesian Learning',
+    long_description = long_desc,
     package_dir={'': 'src'},
     packages=find_packages('src'),
 
