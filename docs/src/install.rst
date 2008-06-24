@@ -85,6 +85,15 @@ Pebl on a cluster, these don't need to be installed on the worker nodes.
 1. Install Graphviz from http://www.graphviz.org/Download.php
 2. Install matplotlib from http://matplotlib.sourceforge.net/installing.html
 
+Finally, install simplejson using easy_install::
+
+    easy_install simplejson
+
+simplejson sometimes fails to install on Windows. In that case, you can use a
+binary package::
+
+    easy_install http://pebl-project.googlecode.com/files/simplejson-1.7.3-py2.5-win32.egg
+
 
 For the XGrid Task Controller
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

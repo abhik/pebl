@@ -1,12 +1,54 @@
 import ez_setup
 ez_setup.use_setuptools()
 
-from setuptools import setup, find_packages, Extension
+from setuptools import setup, find_packages, Extension, Feature
+from distutils.command.build_ext import build_ext
+from distutils.errors import CCompilerError, DistutilsExecError, \
+                             DistutilsPlatformError
 import numpy
 
+BUILD_EXT_WARNING = """
+WARNING: The C extensions could not be compiled. 
+         Pebl will run normally but will be slower.
+
+Below is the output showing how the compilation failed:
+"""
+
+# This class allows C extension building to fail.
+# from http://simplejson.googlecode.com/svn/trunk/setup.py
+class ve_build_ext(build_ext):
+    def run(self):
+        try:
+            build_ext.run(self)
+        except DistutilsPlatformError, x:
+            self._unavailable(x)
+
+    def build_extension(self, ext):
+        try:
+            build_ext.build_extension(self, ext)
+        except (CCompilerError, DistutilsExecError), x:
+           self._unavailable(x)
+
+    def _unavailable(self, exc):
+         print '*'*70
+         print BUILD_EXT_WARNING
+         print exc
+         print '*'*70
+
+# C extension modules (as an optional feature)
+speedymodules = Feature(
+    "Optional speedier C modules.",
+    standard = True,
+    ext_modules = [
+        Extension('pebl._network', sources=['src/pebl/_network.c']),
+        Extension('pebl._cpd', sources=['src/pebl/_cpd.c'], 
+                  include_dirs=[numpy.get_include()]),
+    ]
+)
+
 setup(
-    name='Pebl',
-    version='0.9.8',
+    name='pebl',
+    version='0.9.9',
     description='Python Environment for Bayesian Learning',
     package_dir={'': 'src'},
     packages=find_packages('src'),
@@ -31,11 +73,9 @@ setup(
 
     # required dependencies
     install_requires=[
-        # 'numpy >= 1.0.3',       # matrices, linear algebra, etc
-        'nose >= 0.9',          # testing framework
+        # 'numpy >= 1.0.3',     # matrices, linear algebra, etc
         'pydot',                # to output network as dot file
         'pyparsing >= 1.4.7',   # required by pydot but not specified in its setup
-        'simplejson',           # for html results
     ],
     
     # data files, resources, etc
@@ -51,9 +91,9 @@ setup(
         ]
     },
 
-    # C extension modules
-    ext_modules = [
-        Extension('pebl._network', sources=['src/pebl/_network.c']),
-        Extension('pebl._cpd', sources=['src/pebl/_cpd.c'], include_dirs=[numpy.get_include()]),
-    ],
+    # C extension modules (as an optional feature)
+    features = { 'speedups': speedymodules },
+
+    # build extensions optionally
+    cmdclass={'build_ext': ve_build_ext},
 )
