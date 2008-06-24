@@ -126,13 +126,13 @@ result
 
 .. confparam:: result.format
 
-	Format of the result file.
+	The format for the pebl result file (pickle or html).
 	default=pickle
 
 .. confparam:: result.numnetworks
 
 	Number of top-scoring networks to save. Specify 0 to indicate that
-        all scored networks should be saved.
+    all scored networks should be saved.
 	default=1000
 
 simanneal

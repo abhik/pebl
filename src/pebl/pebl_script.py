@@ -66,7 +66,11 @@ def run(configfile=None):
     controller = taskcontroller.fromconfig()
     results = controller.run(tasks)
     
-    result.merge(results).tofile()
+    merged_result = result.merge(results)
+    if config.get('result.format') == 'html':
+        merged_result.tohtml()
+    else:
+        merged_result.tofile()
 
 def runtask(picklefile=None):
     try:

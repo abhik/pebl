@@ -558,7 +558,7 @@ def fromconfig():
 
     numbins = config.get('data.discretize')
     if numbins > 0:
-        data.discretize(numbins=numbins)
+        data_.discretize(numbins=numbins)
     
     return data_
 

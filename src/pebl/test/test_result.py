@@ -137,11 +137,23 @@ class TestHtmlReport:
         g.run()
         self.result = g.result
         self.tempdir = tempfile.mkdtemp()
+        self.result.tohtml(self.tempdir)
     
     def tearDown(self):
         shutil.rmtree(self.tempdir)
 
     def test_report_creation(self):
-        self.result.tohtml(self.tempdir)
         assert os.path.exists(os.path.join(self.tempdir, 'index.html'))
+    
+    def test_json_datafile(self):
+        assert os.path.exists(os.path.join(self.tempdir, 'data', 'result.data.js'))
+
+    def test_scoresplot(self):
+        assert os.path.exists(os.path.join(self.tempdir, 'data', 'scores.png'))
+
+    def test_network_images(self):
+        assert os.path.exists(os.path.join(self.tempdir, 'data', '0.png'))
+        assert os.path.exists(os.path.join(self.tempdir, 'data', '0-common.png'))
+        assert os.path.exists(os.path.join(self.tempdir, 'data', 'consensus.1.png'))
+
 

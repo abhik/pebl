@@ -71,6 +71,7 @@ The same analysis can be run with the following configuration file::
 
     [data]
     filename = pebl-tutorial-data1.txt
+    discretize = 3
 
     [learner]
     type = greedy.GreedyLearner

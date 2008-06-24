@@ -74,6 +74,17 @@ class LearnerResult:
             'The name of the result output file',
             default='result.pebl'
         ),
+        config.StringParameter(
+            'result.format',
+            'The format for the pebl result file (pickle or html)',
+            config.oneof('pickle', 'html'),
+            default='pickle'
+        ),
+        config.StringParameter(
+            'result.outdir',
+            'Directory for html report.',
+            default='result'
+        ),
         config.IntParameter(
             'result.size',
             """Number of top-scoring networks to save. Specify 0 to indicate that
@@ -127,14 +138,17 @@ class LearnerResult:
         with open(filename, 'w') as fp:
             cPickle.dump(self, fp)
     
-    def tohtml(self, outdir):
+    def tohtml(self, outdir=None):
         """Create a html report of the result.
 
         outdir is a directory to create html files inside.
         """
 
         if _can_create_html:
-            HtmlFormatter().htmlreport(self, outdir)
+            HtmlFormatter().htmlreport(
+                self, 
+                outdir or config.get('result.outdir')
+            )
         else:
             print "Cannot create html reports because some dependencies are missing."
 
