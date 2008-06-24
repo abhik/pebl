@@ -29,8 +29,7 @@ Configuration Parameters
 
 .. confparam:: result.size
 
-	Number of top-scoring networks to save. Specify 0 to indicate that
-    all scored networks should be saved.
+	Number of top-scoring networks to save. Specify 0 to indicate that all scored networks should be saved.
 	default=1000
 
 

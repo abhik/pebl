@@ -1,5 +1,5 @@
 :mod:`taskcontroller.ec2` -- Amazon EC2 task controller
-=======================================================
+========================================================
 
 .. module:: pebl.taskcontroller.ec2
     :synopsis: Amazon EC2 task controller
