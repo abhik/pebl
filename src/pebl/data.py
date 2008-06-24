@@ -139,6 +139,12 @@ class Dataset(object):
              * If variables or samples are not specified, appropriate Variable or
                Sample annotations are created with only the name attribute.
 
+        Note:
+            If you alter Dataset.interventions or Dataset.missing, you must
+            call Dataset._calc_stats(). This is a terrible hack but it speeds
+            up pebl when used with datasets without interventions or missing
+            values (a common case).
+
         """
 
         self.observations = observations
@@ -187,16 +193,24 @@ class Dataset(object):
 
         variables = variables if variables is not None else range(self.variables.size)
         samples = samples if samples is not None else range(self.samples.size)
-
-        return Dataset(
+        skip_stats = not (self.has_interventions or self.has_missing)
+        d = Dataset(
             self.observations[N.ix_(samples,variables)],
             self.missing[N.ix_(samples,variables)],
             self.interventions[N.ix_(samples,variables)],
             self.variables[variables],
             self.samples[samples],
-            skip_stats = True
+            skip_stats = skip_stats
         )
+        
+        # if self does not have interventions or missing, the subset can't.
+        if skip_stats:
+            d._has_interventions = False
+            d._has_missing = False
 
+        return d
+
+    
     def _subset_ni_fast(self, variables):
         ds = _FastDataset.__new__(_FastDataset)
 
@@ -234,7 +248,6 @@ class Dataset(object):
         samples = [sampledict[s] for s in samples] if samples else samples
 
         return self.subset(variables, samples)
-
 
 
     def discretize(self, includevars=None, excludevars=[], numbins=3):
@@ -317,13 +330,31 @@ class Dataset(object):
         """The shape of the dataset as (number of samples, number of variables)."""
         return self.observations.shape
 
+    @property
+    def has_interventions(self):
+        """Whether the dataset has any interventions."""
+        if hasattr(self, '_has_interventions'):
+            return self._has_interventions
+        else:
+            self._has_interventions = self.interventions.any()
+            return self._has_interventions
+
+    @property
+    def has_missing(self):
+        """Whether the dataset has any missing values."""
+        if hasattr(self, '_has_missing'):
+            return self._has_missing
+        else:
+            self._has_missing = self.missing.any()
+            return self._has_missing
+
 
     #
     # private methods/properties
     #
     def _calc_stats(self):
-        self.has_interventions = self.interventions.any()
-        self.has_missing = self.missing.any()
+        self._has_interventions = self.interventions.any()
+        self._has_missing = self.missing.any()
     
     def _guess_arities(self):
         """Guesses variable arity by counting the number of unique observations."""
