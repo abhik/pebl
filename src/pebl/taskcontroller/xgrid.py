@@ -2,6 +2,7 @@ import time
 import os.path
 import shutil 
 import tempfile
+import cPickle
 
 try:
     import xg
@@ -82,7 +83,7 @@ class XgridController(_BaseSubmittingController):
         if xg:
             cn = xg.Connection(self.controller, self.password)
             ct = xg.Controller(cn)
-            return ct.grid(self.gridnum)
+            return ct.grid(self.grid)
 
         return None
 

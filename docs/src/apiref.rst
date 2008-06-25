@@ -18,6 +18,7 @@ Modules:
     learner/simanneal
     network
     posterior
+    prior
     result
     taskcontroller/multiprocess
     taskcontroller/serial

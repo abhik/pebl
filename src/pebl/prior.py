@@ -18,8 +18,8 @@ class Prior(object):
     values over [0,1.0].
 
     Hard priors are specified as:
-        * edges_mustexist: a list of edge-tuples that must be rpesent
-        * edges_mustnotexist: a list of edge-tuples that must not be present
+        * required_edges: a list of edge-tuples that must be rpesent
+        * prohibited_edges: a list of edge-tuples that must not be present
         * constraints: a list of functions that take adjacency matrix as input
                        and return true if constraint met and false otherwise.
 
