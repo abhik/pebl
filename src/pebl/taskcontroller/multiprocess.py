@@ -63,6 +63,12 @@ class MultiProcessController(_BaseController):
             done.append(running.pop(pid, None))
 
         results = [result.fromfile(opjoin(t.cwd, 'result.pebl')) for t in done]
+
+        # to make the results look like deferred results
+        for r in results:
+            r.taskid = 0
+        
+        # clean up 
         for t in done:
             shutil.rmtree(t.cwd)
 

@@ -1,6 +1,9 @@
+from __future__ import with_statement
 import sys, os, os.path
+import tempfile
 from functools import partial
 import shutil
+import cPickle
 
 import numpy as N
 
@@ -10,7 +13,7 @@ from pebl.learner.base import Learner
 
 #TODO: test
 class CustomLearner(Learner):
-    def __init__(self, data_=None, prior_=None, learnerurl=':', **kw):
+    def __init__(self, data_, prior_=None, learnerurl=':', **kw):
         """Create a CustomLearner wrapper.
 
         If you don't use a TaskController, you can simply create a custom
@@ -38,35 +41,47 @@ class CustomLearner(Learner):
 
         # save info so custom learner can be recreated at run (possibly on a
         # different machine)
-        self.learner_filename, self.learner_class = learnerurl.split(':')
-        self.learner_source = open(self.learner_filename).read()
+        self.learner_filepath, self.learner_class = learnerurl.split(':')
+        self.learner_filename = os.path.basename(self.learner_filepath)
+        self.learner_source = open(self.learner_filepath).read()
         self.data = data_
         self.prior = prior_
         self.kw = kw
 
     def run(self):
-        # recreate the custom learner
+        # re-create the custom learner
         tempdir = tempfile.mkdtemp()
-        tempfile = partial(os.path.join, tempdir)
-        open(tempfile(self.learner_filename), 'w').write(self.learner_source)
-
+        with file(os.path.join(tempdir, self.learner_filename), 'w') as f:
+            f.write(self.learner_source)
+        
         sys.path.insert(0, tempdir)
-        modname = os.path.basename(self.learner_filename).split('.')[0]
-        mod = __import__(modname, fromlist=['.'])
+        modname = self.learner_filename.split('.')[0]
+        mod = __import__(modname, fromlist=['*'])
+        
+        reload(mod) # to load the latest if an older version exists
         custlearner = getattr(mod, self.learner_class)
 
         # run the custom learner
-        custlearner(
-            self.data_ or data.fromconfig(), 
-            self.prior_ or prior.fromconfig(),
+        clearn = custlearner(
+            self.data or data.fromconfig(), 
+            self.prior or prior.fromconfig(),
             **self.kw
-        ).run()
-
-        self.result = custlearner.result
-
+        )
+        self.result = clearn.run()
+        
         # cleanup
         sys.path.remove(tempdir)
         shutil.rmtree(tempdir)
 
         return self.result
 
+class CustomResult:
+    def __init__(self, **kw):
+        for k,v in kw.iteritems():
+            setattr(self, k, v)
+
+    def tofile(self, filename=None):
+        filename = filename or config.get('result.filename')
+        with open(filename, 'w') as fp:
+            cPickle.dump(self, fp)
+ 

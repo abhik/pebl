@@ -26,6 +26,16 @@ class _BaseController(object):
     def __init__(self, *args, **kwargs): pass
     def run(self, tasks): pass
 
+    # For synchronous task controllers (like serial and multiprocess), submit
+    # simply runs (blocking). Since the result of submit is a real result and
+    # not a deferred result, retrieve simply returns the results that were
+    # passed in. This let's synchronous and asynchronous task controllers have
+    # the same interface.
+    def submit(self, tasks):
+        return self.run(tasks)
+    def retrieve(self, deferred_results):
+        return deferred_results
+
 class _BaseSubmittingController(_BaseController):
     def submit(self, tasks): pass
     def retrieve(self, deferred_results): pass

@@ -10,4 +10,10 @@ class SerialController(_BaseController):
     """
 
     def run(self, tasks):
-        return [t.run() for t in tasks]
+        results =  [t.run() for t in tasks]
+        
+        # to make the results look like deferred results
+        for r in results:
+            r.taskid = 0
+
+        return results 

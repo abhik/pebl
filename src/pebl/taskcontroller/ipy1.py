@@ -2,12 +2,14 @@
 
 from __future__ import with_statement
 
+import sys
 import os, os.path
 import tempfile
 import cPickle
 
 from pebl import config, result
 from pebl.taskcontroller.base import _BaseSubmittingController, DeferredResult
+from pebl.learner import custom
 
 try:
     import ipython1.kernel.api as ipy1kernel
@@ -21,9 +23,9 @@ class IPython1DeferredResult(DeferredResult):
 
     @property
     def result(self):
-        if not hasattr(self, '_result'):
-            self.ipy1result = self.tc.getTaskResult(self.taskid)
-
+        if not hasattr(self, 'ipy1result'):
+            self.ipy1result = self.tc.getTaskResult(self.taskid, block=True)
+        
         return self.ipy1result['result']
 
     @property
@@ -61,6 +63,7 @@ class IPython1Controller(_BaseSubmittingController):
     def submit(self, tasks):
         drs = []
         for task in tasks:
+            # create an ipython1 task from pebl task
             ipy1task = ipy1kernel.Task(
                 "from pebl.pebl_script import runtask_picklestr; result = runtask_picklestr(task)",
                 resultNames = ['result'],
