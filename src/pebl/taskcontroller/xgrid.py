@@ -16,6 +16,7 @@ class XgridDeferredResult(DeferredResult):
     def __init__(self, grid, task):
         self.grid = grid
         self.job = task.job
+        self.taskid = self.job.jobID
 
     @property
     def result(self):
