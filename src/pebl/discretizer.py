@@ -39,7 +39,8 @@ def maximum_entropy_discretize(indata, includevars=None, excludevars=[], numbins
 
         oldvar = indata.variables[v]
         newvar = data.DiscreteVariable(oldvar.name, numbins)
-        newvar.__dict__.update(oldvar.__dict__)
+        newvar.__dict__.update(oldvar.__dict__) # copy any other data attached to variable
+        newvar.arity = numbins
         indata.variables[v] = newvar
 
     # if discretized all variables, then cast observations to int
