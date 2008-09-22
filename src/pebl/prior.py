@@ -2,7 +2,7 @@
 
 import numpy as N
 
-NEGINF = float('-inf')
+NEGINF = -N.inf
 
 #
 # Prior Models
@@ -22,6 +22,15 @@ class Prior(object):
         * prohibited_edges: a list of edge-tuples that must not be present
         * constraints: a list of functions that take adjacency matrix as input
                        and return true if constraint met and false otherwise.
+
+   For more information about calculating prior probabilities via energy
+   matrices, consult: 
+
+       1. Imoto, S. and Higuchi, T. and Goto, T. and Tashiro, K. and Kuhara, S.
+          and Miyano, S. Combining microarrays and biological knowledge for
+          estimating gene networks via Bayesian networks. Proc IEEE Comput Soc
+          Bioinform Conf. 2003, p.104-113.
+
 
     """
 

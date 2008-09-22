@@ -34,7 +34,6 @@ class XgridDeferredResult(DeferredResult):
  
     @property
     def finished(self):
-        print self.job, self.job.info(update=1)
         return self.job.info(update=1).get('jobStatus') in ('Finished',)
 
 
@@ -105,7 +104,6 @@ class XgridController(_BaseSubmittingController):
    
     def retrieve(self, deferred_results):
         drs = deferred_results
-        print drs
 
         # poll for job results
         # i'd rather select() or wait() but xgrid doesn't offer that via the

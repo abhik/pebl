@@ -60,6 +60,12 @@ class SimulatedAnnealingLearner(Learner):
     def __init__(self, data_=None, prior_=None, **options):
         """Create a Simulated Aneaaling learner.
 
+        For more information about Simulated Annealing algorithms, consult:
+
+            1. http://en.wikipedia.org/wiki/Simulated_annealing
+            2. D. Heckerman. A Tutorial on Learning with Bayesian Networks. 
+               Microsoft Technical Report MSR-TR-95-06, 1995. p.35-36.
+
         Any config param for 'simanneal' can be passed in via options.
         Use just the option part of the parameter name.
         

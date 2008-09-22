@@ -21,30 +21,73 @@ class CyclicNetworkError(Exception):
 # Localscore Cache
 #
 class LocalscoreCache(object):
-    def __init__(self, evaluator):
+    """ A LRU cache for local scores.
+
+    Based on code from http://code.activestate.com/recipes/498245/
+    """
+
+    _params = (
+        config.IntParameter(
+            'localscore_cache.maxsize',
+            "Max number of localscores to cache. Default=-1 means unlimited size.",
+            default=-1
+        )
+    )
+
+    def __init__(self, evaluator, cachesize=None):
         self._cache = {}
+        self._queue = deque()
+        self._refcount = {}
+        self.cachesize = cachesize or config.get('localscore.cachesize')
+
         self.neteval = evaluator
         self.hits = 0
         self.misses = 0
 
-    def get(self, node, parents):
-        index = tuple([node] +  parents)
-        score = self._cache.get(index, None)
-        
-        if score is None:
-            self.misses += 1
-            score = self.neteval._cpd(node, parents).loglikelihood()
-            self._cache[index] = score
-        else:
-            self.hits += 1
+    def __call__(self, node, parents):
+        # make variables local
+        _len = len
+        _queue = self._queue
+        _refcount = self._refcount
+        _cache = self._cache
+        _maxsize = self.cachesize
 
+        index = tuple([node] +  parents)
+        
+        # get from cache or compute
+        try:
+            score = _cache[index]
+            self.hits += 1
+        except KeyError:
+            score = _cache[index] = self.neteval._cpd(node, parents).loglikelihood()
+            self.misses += 1
+
+        # if using LRU cache (maxsize != -1)
+        if _maxsize > 0:
+            # record that key was accessed
+            _queue.append(index)
+            _refcount[index] = _refcount.get(index, 0) + 1
+
+            # purge LRU entry
+            while _len(_cache) > _maxsize:
+                k = _queue.popleft()
+                _refcount[k] -= 1
+                if not _refcount[k]:
+                    del _cache[k]
+                    del _refcount[k]
+
+            # Periodically compact the queue by duplicate keys
+            if _len(_queue) > _maxsize * 4:
+                for i in xrange(_len(_queue)):
+                    k = _queue.popleft()
+                    if _refcount[k] == 1:
+                        _queue.append(k)
+                    else:
+                        _refcount[k] -= 1
+            
         return score
 
-    __call__ = get
 
-    def set(self, node, parents, score):
-        index = tuple([node] +  parents)
-        self._cache[index] = score
 
 #
 # Network Evaluators
@@ -329,6 +372,13 @@ class MissingDataNetworkEvaluator(NetworkEvaluator):
 
         This evaluator uses a Gibb's sampler for sampling over the space of
         possible completions for the missing values.
+
+        For more information about Gibb's sampling, consult:
+
+            1. http://en.wikipedia.org/wiki/Gibbs_sampling
+            2. D. Heckerman. A Tutorial on Learning with Bayesian Networks. 
+               Microsoft Technical Report MSR-TR-95-06, 1995. p.21-22.
+
        
         Any config param for 'gibbs' can be passed in via options.
         Use just the option part of the parameter name.

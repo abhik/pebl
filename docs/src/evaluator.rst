@@ -22,6 +22,19 @@ Note: Most user's shouldn't need to use this module directly. All included
 learners encapsulate this functionality. This is really only for writing custom
 learners.
 
+LocalscoreCache
+---------------
+
+Although most users will never use the localscore cache directly, using pebl
+with large datasets will require setting the maximum size of the cache to avoid
+memory issues. There is only one relevant configuration parameter.
+
+.. confparam:: localscore_cache.maxsize
+
+        Max number of localscores to cache. Default=-1 means unlimited size.
+        default=-1
+
+
 SmartNetworkEvaluator
 ---------------------
 

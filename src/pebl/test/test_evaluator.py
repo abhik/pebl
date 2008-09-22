@@ -6,6 +6,7 @@ from pebl import data, network, evaluator, prior, config
 from pebl.test import testfile
 import os
 import copy
+import random
 
 
 class TestBaseNetworkEvaluator:
@@ -281,4 +282,24 @@ Test the exact enumerating missing data evaluator
 
 """
 
+class TestLocalscoreCache:
+    def setUp(self):
+        self.data = data.fromfile(testfile('testdata10.txt'))
+        self.evaluator = evaluator.NetworkEvaluator(self.data, network.fromdata(self.data))
+
+    def test_creating_cache(self):
+        c = evaluator.LocalscoreCache(self.evaluator)
+        nodes = range(len(self.data.variables))
+        for i in xrange(10):
+            c(random.choice(nodes),
+              [random.choice(nodes) for i in xrange(random.randrange(len(nodes)))])
+
+    def test_settingmaxsize(self):
+        c = evaluator.LocalscoreCache(self.evaluator, 3)
+        nodes = range(len(self.data.variables))
+        for i in xrange(10):
+            c(random.choice(nodes),
+              [random.choice(nodes) for i in xrange(random.randrange(len(nodes)))])
+
+        assert len(c._cache) <= 3
 

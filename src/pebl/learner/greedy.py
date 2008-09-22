@@ -60,6 +60,12 @@ class GreedyLearner(Learner):
         
         Any config param for 'greedy' can be passed in via options.
         Use just the option part of the parameter name.
+
+        For more information about greedy learning algorithms, consult:
+
+            1. http://en.wikipedia.org/wiki/Greedy_algorithm
+            2. D. Heckerman. A Tutorial on Learning with Bayesian Networks. 
+               Microsoft Technical Report MSR-TR-95-06, 1995. p.35.
             
         """
 
@@ -123,11 +129,9 @@ class GreedyLearner(Learner):
                 # score did not improve, undo network alteration
                 self.stats.unimproved_iterations += 1
                 self.evaluator.restore_network()
-                #print '.', curscore
             else:
                 self.stats.best_score = curscore
                 self.stats.unimproved_iterations = 0
-                #print 'X', curscore
 
     #
     # Stopping and restarting criteria

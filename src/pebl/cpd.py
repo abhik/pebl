@@ -39,9 +39,10 @@ class CPD(object):
     def loglikelihood(self):
         """Calculates the loglikelihood of the data.
 
-        This method implements the log of the g function (equation 12) from
-        "Cooper, Herskovitz. A Bayesian Method for the Induction of
-        Probabilistic Networks from Data."  
+        This method implements the log of the g function (equation 12) from:
+
+        Cooper, Herskovitz. A Bayesian Method for the Induction of
+        Probabilistic Networks from Data.
         
         """ 
         pass

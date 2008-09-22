@@ -1,7 +1,7 @@
 import numpy as N
 
 from pebl import network, config, evaluator, data, prior
-from pebl.taskcontroller import Task
+from pebl.taskcontroller.base import Task
 
 #
 # Exceptions

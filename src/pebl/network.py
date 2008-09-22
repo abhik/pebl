@@ -228,7 +228,10 @@ class Network(object):
         """Uses a depth-first search (dfs) to detect cycles."""
 
         roots = list(roots) if roots else self.nodeids
-        return _network.is_acyclic(self.edges._outgoing, roots, [])
+        if _network:
+            return _network.is_acyclic(self.edges._outgoing, roots, [])
+        else:
+            return self.is_acyclic_python(roots)
 
     def is_acyclic_python(self, roots=None):
         """Uses a depth-first search (dfs) to detect cycles."""

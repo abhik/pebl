@@ -1,5 +1,4 @@
 from pebl import config
-from pebl.taskcontroller.base import *
 
 #
 # Module Parameteres
