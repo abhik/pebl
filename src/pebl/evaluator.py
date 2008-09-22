@@ -38,7 +38,7 @@ class LocalscoreCache(object):
         self._cache = {}
         self._queue = deque()
         self._refcount = {}
-        self.cachesize = cachesize or config.get('localscore.cachesize')
+        self.cachesize = cachesize or config.get('localscore_cache.maxsize')
 
         self.neteval = evaluator
         self.hits = 0
