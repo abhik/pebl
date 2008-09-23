@@ -1,21 +1,28 @@
-"""Testing the scale of problems that pebl can handle."""
+"""Testing the scale of problems that pebl can handle.
+
+How to use this
+---------------
+Import into python shell and call test_pebl with different sets of arguments.
+
+"""
 
 import numpy as N
 from pebl import data, config
 from pebl.learner import greedy
 
-def test_pebl(numvars=100, numsamples=100, greedy_iters=1000000):
-    config.set('localscore_cache.maxsize', 1000000)
+def test_pebl(numvars, numsamples, greedy_iters, cachesize):
+    print "Testing with #vars=%d, #samples=%d, iters=%d, cachesize=%d" % (
+    numvars, numsamples, greedy_iters, cachesize)
+
+    config.set('localscore_cache.maxsize', cachesize)
     d = data.Dataset(N.random.rand(numsamples, numvars))
     d.discretize()
     g = greedy.GreedyLearner(d, max_iterations=greedy_iters)
     g.run()
+    return g
 
 if __name__ == '__main__':
-    print "Testing with numvars=100, numsamples=100, iterations=1M"
-    test_pebl()
+    test_pebl(1000, 1000, 1000000, 1000)
 
-    print "Testing with numvars=1000, numsamples=1000, iterations=1M"
-    test_pebl()
 
 
