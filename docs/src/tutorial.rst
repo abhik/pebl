@@ -17,7 +17,7 @@ library but requires no programming.  Each example in this tutorial will
 include a python script and a pebl configuration file that runs the same 
 analysis (when possible).
 
-.. note:: This tutorial uses Pebl 0.9.10
+.. note:: This tutorial uses Pebl 1.0
 
 Introducing the Problem
 -----------------------
@@ -323,6 +323,22 @@ cannot be later merged. A better option is to save the result using the
 >>> merged_result.tofile("results_sofar.pebl")
 
 A third strategy is to calculate a p-value for each scored network. This will be added to the tutorial shortly.
+
+A Note on Scale of Problems Pebl Can Solve
+-------------------------------------------
+
+Pebl imposes few limits on the scale of problems it can handle other than the
+limits imposed by the hardware you use. The
+:confparam:`localscore_cache.maxsize` configuration parameter can be used to
+control the size of the main cache used by pebl. With a value appropriate to
+your memory availability, pebl can be used for quite large datasets. We have
+successfully tested pebl with datasets of size (number variable, number
+samples) = (10000,10000) and (1000,100000) on a machine with 2GB memory.  
+
+While pebl can handle such large datasets without crashing, because structure
+learning is a known NP-Hard problem, using pebl with datasets containing more
+than a few hundred variables will likely give poor results due to poor coverage
+of the search space.
 
 More Coming Soon
 ----------------

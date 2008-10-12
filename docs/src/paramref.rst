@@ -100,6 +100,15 @@ listlearner
 	List of networks to score.
 	default=
 
+localscore_cache
+----------------
+
+.. confparam:: localscore_cache.maxsize
+
+        Max number of localscores to cache. Default=-1 means unlimited size.
+        default=-1
+
+    
 multiprocess
 ------------
 
