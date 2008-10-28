@@ -23,6 +23,7 @@ includes the following features:
  * Handles missing values and hidden variables using exact and heuristic
    methods 
  * Provides several learning algorithms; makes creating new ones simple
+ * Supports hard and soft structural priors
  * Has facilities for transparent parallel execution
  * Calculates edge marginals and consensus networks
  * Presents results in a variety of formats
