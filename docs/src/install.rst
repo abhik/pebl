@@ -64,7 +64,7 @@ easy_install::
 
     easy_install pebl
 
-.. note:: The current version of Pebl is 0.9.10.
+.. note:: The current version of Pebl is 1.0.1
 
 If you have downloaded the source code for Pebl (or installing pebl from svn),
 you can run :command:`sudo python setup.py install` from pebl's root directory
