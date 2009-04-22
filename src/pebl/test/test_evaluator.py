@@ -217,12 +217,12 @@ class TestMissingDataNetworkEvaluator:
         # score. alter data. score. alter data (back to original). score. 
         # 1st and last scores should be same.
         self.neteval1.score_network()
-        score1 = self.neteval1._score_network_core()
+        score1 = self.neteval1._score_network_with_tempdata()
         oldval = self.neteval1.data.observations[0][2]
         self.neteval1._alter_data(0, 2, 1)
-        self.neteval1._score_network_core()
+        self.neteval1._score_network_with_tempdata()
         self.neteval1._alter_data(0, 2, oldval)
-        score2 = self.neteval1._score_network_core()
+        score2 = self.neteval1._score_network_with_tempdata()
 
         assert score1 == score2, "Altering and unaltering data leaves score unchanged."
 

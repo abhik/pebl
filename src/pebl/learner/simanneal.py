@@ -4,7 +4,7 @@ from math import exp
 import random
 
 from pebl import network, result, evaluator, config
-from pebl.learner.base import Learner
+from pebl.learner.base import *
 
 
 class SALearnerStatistics:
