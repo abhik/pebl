@@ -286,7 +286,7 @@ class Network(object):
 
         dotgraph = pydot.graph_from_dot_file(dot2)
         nodes = (n for n in dotgraph.get_node_list() if n.get_pos())
-        self.node_positions = [[int(i) for i in n.get_pos()[1:-1].split(',')] for n in nodes] 
+        self.node_positions = [[int(float(i)) for i in n.get_pos()[1:-1].split(',')] for n in nodes] 
 
 
     def as_string(self):
