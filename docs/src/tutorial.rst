@@ -244,7 +244,6 @@ taskcontroller package to run these learners in parallel::
 >>> results = tc.run(learners)
 >>> merged_results = results.merge(merged_results)
 >>> merged_results.tohtml("example4-result")
->>> merged_result.tohtml("example2-result")
 
 In this example, we import the multiprocess module (line 3), create a
 multiprocess task controller with a pool size of two processes (line 7), run
