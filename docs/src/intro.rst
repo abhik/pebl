@@ -32,7 +32,7 @@ include :term:`prior models` and :term:`task controllers`.
         This is the set of observations that is used to score a given network.
         The data can include missing values and hidden/unobserved variables and
         observations can be marked as being the result of specific
-        interventions. Data can be read from a file or created progrmatically.
+        interventions. Data can be read from a file or created programatically.
 
     Learner
         A learner implements a specific learning algorithm. It is given some
