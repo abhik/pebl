@@ -242,7 +242,7 @@ taskcontroller package to run these learners in parallel::
 >>>            [ simanneal.SimulatedAnnealingLearner(dataset) for i in range(5) ]
 >>> tc = multiprocess.MultiProcessController(poolsize=2)
 >>> results = tc.run(learners)
->>> merged_result = results.merge(results)
+>>> merged_result = result.merge(results)
 >>> merged_result.tohtml("example4-result")
 
 In this example, we import the multiprocess module (line 3), create a
