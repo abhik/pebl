@@ -204,6 +204,70 @@ class TestDataDiscretization:
     def test_arity(self):
         assert [v.arity for v in self.data.variables] == self.expected_arities
 
+
+class TestDataDiscretizationWithMissing:
+    """Respond to Issue 32: Pebl should ignore the missing values when
+    selecting bins for each data point.  Discretization for this should be
+    the same as if there were no missing data, as in TestDataDiscretization.
+
+    """
+    def setUp(self):
+        self.data = data.fromfile(testfile('testdata5m.txt'))
+        self.data.discretize()
+        self.expected_original = \
+            N.array([[ 1.2,  1.4,  2.1,  2.2,  1.1],
+                     [ 2.3,  1.1,  2.1,  3.2,  1.3],
+                     [ 3.2,  0. ,  1.2,  2.5,  1.6],
+                     [ 4.2,  2.4,  3.2,  2.1,  2.8],
+                     [ 2.7,  1.5,  0. ,  1.5,  1.1],
+                     [ 1.1,  2.3,  2.1,  1.7,  3.2],
+                     [ 2.3,  1.1,  4.3,  2.3,  1.1],
+                     [ 3.2,  2.6,  1.9,  1.7,  1.1],
+                     [ 2.1,  1.5,  3. ,  1.4,  1.1],
+                     [ 0. ,  0. ,  0. ,  0. ,  0. ],
+                     [ 0. ,  0. ,  0. ,  0. ,  0. ],
+                     [ 0. ,  0. ,  0. ,  0. ,  0. ]])
+        self.expected_discretized = \
+            N.array([[0, 1, 1, 1, 0],
+                    [1, 0, 1, 2, 1],
+                    [2, 0, 0, 2, 2],
+                    [2, 2, 2, 1, 2],
+                    [1, 1, 0, 0, 0],
+                    [0, 2, 1, 0, 2],
+                    [1, 0, 2, 2, 0],
+                    [2, 2, 0, 0, 0],
+                    [0, 1, 2, 0, 0],
+                    [0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0]])
+        self.expected_arities = [3,3,3,3,3]
+        self.expected_missing = N.array([[False, False, False, False, False],
+                                         [False, False, False, False, False],
+                                         [False, False, False, False, False],
+                                         [False, False, False, False, False],
+                                         [False, False, False, False, False],
+                                         [False, False, False, False, False],
+                                         [False, False, False, False, False],
+                                         [False, False, False, False, False],
+                                         [False, False, False, False, False],
+                                         [True , True , True , True , True ],
+                                         [True , True , True , True , True ],
+                                         [True , True , True , True , True ]], 
+                                        dtype=bool)
+
+    def test_orig_observations(self):
+        assert (self.data.original_observations == self.expected_original).all()
+
+    def test_disc_observations(self):
+        assert (self.data.observations == self.expected_discretized).all()
+
+    def test_arity(self):
+        assert [v.arity for v in self.data.variables] == self.expected_arities
+
+    def test_missing(self):
+        assert (self.data.missing == self.expected_missing).all()
+
+
 class TestSelectiveDataDiscretization(TestDataDiscretization):
     def setUp(self):
         self.data = data.fromfile(testfile('testdata5.txt'))
