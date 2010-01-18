@@ -300,7 +300,6 @@ def merge(*args):
         merge(*results)
     
     """
-   
     results = flatten(args)
     if len(results) is 1:
         return results[0]

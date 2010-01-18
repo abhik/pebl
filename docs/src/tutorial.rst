@@ -206,7 +206,7 @@ annealing learners::
 >>> dataset = data.fromfile("pebl-tutorial-data2.txt")
 >>> learners = [ greedy.GreedyLearner(dataset, max_iterations=1000000) for i in range(5) ] + \
 >>>            [ simanneal.SimulatedAnnealingLearner(dataset) for i in range(5) ]
->>> merged_result = result.merge(learner.run() for learner in learners)
+>>> merged_result = result.merge([learner.run() for learner in learners])
 >>> merged_result.tohtml("example3-result")
 
 The code above is similar to the last example except that we create a list of

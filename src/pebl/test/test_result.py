@@ -91,10 +91,6 @@ class TestMergingResults(object):
         mr = result.merge(self.result1, self.result2)
         len(mr.networks) == (5+3-1) # 1 duplicate network
 
-    def test_merged_size1(self):
-        mr = result.merge([self.result1, self.result2])
-        len(mr.networks) == (5+3-1) # 1 duplicate network
-
     def test_merged_scores(self):
         mr = result.merge([self.result1, self.result2])
         assert [n.score for n in mr.networks] == [-13, -12, -11, -10.5, -8.5, -6, -5.5]
