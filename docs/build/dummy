@@ -1,0 +1,2 @@
+File is here so 'python setup.py sdist' will include this directory; this is
+required for building RPM packages for Fedora.
