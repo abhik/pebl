@@ -34,7 +34,7 @@ class TestBaseNetworkEvaluator:
         assert allclose(self.neteval.score_network(), -15.461087517)
 
     def test_score2(self):
-        assert (self.neteval.clear_network(), -15.6842310683)
+        assert allclose(self.neteval.clear_network(), -15.6842310683)
 
     def test_score3(self):
         self.neteval.clear_network()
