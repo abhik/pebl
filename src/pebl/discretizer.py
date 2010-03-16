@@ -44,11 +44,13 @@ def maximum_entropy_discretize(indata, includevars=None, excludevars=[], numbins
         vmiss = indata.missing[:,v]
         vdata_nm = vdata[-vmiss]
         argsorted = vdata_nm.argsort()
-        # Find bin edges (cutpoints) using no-missing 
-        binsize = len(vdata_nm)//numbins
-        binedges = [vdata_nm[argsorted[binsize*b - 1]] for b in range(numbins)][1:]
-        # Discretize full data. Missings get added to bin with 0.0.
-        indata.observations[:,v] = N.searchsorted(binedges, vdata)
+
+        if len(vdata_nm):
+            # Find bin edges (cutpoints) using no-missing 
+            binsize = len(vdata_nm)//numbins
+            binedges = [vdata_nm[argsorted[binsize*b - 1]] for b in range(numbins)][1:]
+            # Discretize full data. Missings get added to bin with 0.0.
+            indata.observations[:,v] = N.searchsorted(binedges, vdata)
 
         oldvar = indata.variables[v]
         newvar = data.DiscreteVariable(oldvar.name, numbins)
